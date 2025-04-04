@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Africa Box - Streaming HD Sans Interruption</title>
+  <title>Africa Box - Streaming Professionnel HD</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
@@ -235,40 +235,10 @@
       animation: pulse 2s infinite;
     }
 
-    .share-float {
-      position: fixed;
-      bottom: 20px;
-      right: 90px;
-      background: #1e1e2f;
-      color: white;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      z-index: 1000;
-      font-size: 30px;
-      animation: pulse 2s infinite;
-    }
-
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
-    }
-
-    .countdown {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      z-index: 100;
     }
 
     @media (max-width: 768px) {
@@ -302,10 +272,6 @@
       .search-bar input {
         width: 90%;
       }
-      .share-float {
-        right: 80px;
-        bottom: 90px;
-      }
     }
 
     @media (min-width: 1200px) {
@@ -321,25 +287,22 @@
 <body>
 
   <div class="video-container">
-    <div class="countdown" id="countdown">Lecture: 60s</div>
     <video id="videoPlayer" class="plyr" controls autoplay>
-      <source id="videoSource" src="" type="application/x-mpegURL">
+      <source id="videoSource" src="http://connectiktv.ddns.net:5000/playtv/@playtv/playlist.m3u8" type="application/x-mpegURL">
       Votre navigateur ne supporte pas la vidéo.
     </video>
     <div id="loadingOverlay" class="loading-overlay">
       <div class="premium-overlay">
         <div class="premium-content">
-          <i class="fas fa-crown"></i>
           <h3>Version Premium Disponible</h3>
-          <p>Profitez de 1500+ chaînes sans interruption en HD</p>
+          <p>Profitez de 1500+ chaînes</p>
           <div class="pricing">
             <div class="plan">
-              <span class="price">3,000 FCFA</span>
-              <span class="period">/mois</span>
+              <span class="price">3000F CFA / Mois</span>
               <button class="subscribe-btn" onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20au%20forfait%20mensuel%20Africa%20Box%20TV'">S'abonner</button>
             </div>
-        </div>
-        </div>
+            </div>
+            </div>
       </div>
     </div>
   </div>
@@ -366,7 +329,6 @@
     const loadingOverlay = document.getElementById('loadingOverlay');
     const channelsList = document.getElementById("channelListSection");
     const searchInput = document.getElementById("searchInput");
-    const countdownElement = document.getElementById("countdown");
     let hls = null;
     let currentSource = "";
     let retryCount = 0;
@@ -375,11 +337,6 @@
     let channelChanges = 0;
     let popupShown = false;
     let hasSubscribed = false;
-    let currentChannel = null;
-    let countdownInterval = null;
-    let minViewTime = 60; // 60 secondes minimum de lecture
-    let remainingTime = minViewTime;
-    let bufferDetected = false;
 
     // Configuration du lecteur
     const player = new Plyr(videoPlayer, {
@@ -1905,170 +1862,74 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
       const channels = parseM3U(m3uData);
       displayChannels(channels);
       
-      // Démarrer avec une chaîne aléatoire
-      const randomChannel = channels[Math.floor(Math.random() * channels.length)];
-      loadChannel(randomChannel.url, randomChannel.name);
-      
       // Afficher le popup après 30 secondes
       setTimeout(showSmartPopup, 30000);
     });
 
-    // Fonction pour charger une chaîne avec minuterie
-    function loadChannel(url, channelName) {
-      // Réinitialiser la minuterie
-      resetCountdown();
-      
+    // Fonction pour charger une chaîne
+    function loadChannel(url) {
       channelChanges++;
-      currentChannel = channelName;
       currentSource = url;
       retryCount = 0;
-      bufferDetected = false;
-      
-      // Afficher le loading overlay avec le nom de la chaîne
       loadingOverlay.classList.add('active');
-      loadingOverlay.querySelector('.premium-content h3').innerHTML = `Chargement de ${channelName || 'la chaîne'}...`;
-      
-      // Pré-buffer avant lecture
-      preloadStream(url).then(() => {
-        if (Hls.isSupported()) {
-          if (hls) hls.destroy();
-          hls = new Hls({
-            maxBufferLength: 60,
-            maxMaxBufferLength: 120,
-            maxBufferSize: 60 * 1000 * 1000,
-            maxBufferHole: 0.5,
-            lowLatencyMode: true,
-            abrEwmaDefaultEstimate: 500000,
-            startLevel: -1,
-            abrBandWidthFactor: 0.95,
-            abrBandWidthUpFactor: 0.7,
-            abrMaxWithRealBitrate: true
-          });
-          
-          hls.loadSource(url);
-          hls.attachMedia(videoPlayer);
-          
-          hls.on(Hls.Events.ERROR, function(event, data) {
-            if (data.fatal) {
-              switch (data.type) {
-                case Hls.ErrorTypes.NETWORK_ERROR:
-                  handleStreamError('Erreur réseau');
-                  break;
-                case Hls.ErrorTypes.MEDIA_ERROR:
-                  hls.recoverMediaError();
-                  break;
-                default:
-                  handleStreamError('Erreur de lecture');
-              }
+
+      if (Hls.isSupported()) {
+        if (hls) hls.destroy();
+        hls = new Hls({
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
+          autoStartLoad: true,
+        });
+        hls.loadSource(url);
+        hls.attachMedia(videoPlayer);
+
+        hls.on(Hls.Events.ERROR, function(event, data) {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                reloadStream();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                reloadStream();
             }
-          });
-          
-          hls.on(Hls.Events.FRAG_BUFFERED, function() {
-            bufferDetected = true;
-          });
-        } else {
-          videoPlayer.src = url;
-        }
-        
-        videoPlayer.play().then(() => {
-          startCountdown();
-        }).catch(e => {
-          console.error("Erreur de lecture:", e);
-          handleStreamError('Erreur de démarrage');
+          }
         });
-        
-        if (channelChanges % 3 === 0) showSmartPopup();
-      }).catch(error => {
-        console.error("Erreur de préchargement:", error);
-        handleStreamError('Erreur de connexion');
-      });
-    }
-
-    // Préchargement du flux
-    function preloadStream(url) {
-      return new Promise((resolve, reject) => {
-        const testHls = new Hls();
-        testHls.loadSource(url);
-        testHls.on(Hls.Events.MANIFEST_PARSED, function() {
-          testHls.destroy();
-          resolve();
-        });
-        testHls.on(Hls.Events.ERROR, function(event, data) {
-          testHls.destroy();
-          reject(data);
-        });
-      });
-    }
-
-    // Gestion des erreurs améliorée
-    function handleStreamError(errorType) {
-      if (retryCount < maxRetries) {
-        retryCount++;
-        const retryDelay = Math.min(3000 * retryCount, 15000);
-        
-        loadingOverlay.querySelector('.premium-content h3').innerHTML = `
-          ${errorType} - Reconnexion (${retryCount}/${maxRetries})...
-        `;
-        
-        setTimeout(() => {
-          loadChannel(currentSource, currentChannel);
-        }, retryDelay);
       } else {
-        showErrorOverlay();
+        videoPlayer.src = url;
       }
-    }
-
-    // Affichage d'erreur
-    function showErrorOverlay() {
-      loadingOverlay.innerHTML = `
-        <div class="premium-overlay">
-          <div class="premium-content">
-            <i class="fas fa-exclamation-triangle" style="color: #ff3333;"></i>
-            <h3>Chaîne temporairement indisponible</h3>
-            <p>Nous n'arrivons pas à charger cette chaîne. Essayez une autre chaîne ou passez à la version Premium pour un accès stable.</p>
-            <div style="margin-top: 20px;">
-              <button class="subscribe-btn" onclick="filterChannels()">
-                <i class="fas fa-random"></i> Chaîne aléatoire
-              </button>
-              <button class="subscribe-btn" style="margin-top: 10px; background: #25D366;" 
-                onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20à%20Africa%20Box%20TV'">
-                <i class="fab fa-whatsapp"></i> S'abonner
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Minuterie de lecture
-    function startCountdown() {
-      resetCountdown();
-      remainingTime = minViewTime;
-      updateCountdown();
       
-      countdownInterval = setInterval(() => {
-        if (videoPlayer.paused || videoPlayer.ended || bufferDetected) return;
-        
-        remainingTime--;
-        updateCountdown();
-        
-        if (remainingTime <= 0) {
-          clearInterval(countdownInterval);
-          countdownElement.style.display = 'none';
-        }
-      }, 1000);
+      videoPlayer.play().catch(e => {
+        console.error("Erreur de lecture:", e);
+        reloadStream();
+      });
+      
+      if (channelChanges % 3 === 0) showSmartPopup();
     }
 
-    function resetCountdown() {
-      if (countdownInterval) clearInterval(countdownInterval);
-      remainingTime = minViewTime;
-      countdownElement.style.display = 'block';
-      updateCountdown();
-    }
-
-    function updateCountdown() {
-      countdownElement.textContent = `Lecture: ${remainingTime}s`;
-      countdownElement.style.color = remainingTime > 10 ? 'white' : '#ff5555';
+    // Fonction pour relancer le flux
+    function reloadStream() {
+      if (currentSource && retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(() => {
+          loadChannel(currentSource);
+        }, 3000 * retryCount);
+      } else {
+        loadingOverlay.innerHTML = `
+          <div style="text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ff3333;"></i>
+            <p>Flux indisponible. Veuillez réessayer plus tard ou passer à la version Premium.</p>
+            <button onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20à%20Africa%20Box%20TV'" 
+              style="margin-top: 15px; padding: 10px 25px; background: #FFD700; color: #000; border: none; border-radius: 25px; cursor: pointer;">
+              Passer à la version Premium
+            </button>
+          </div>
+        `;
+      }
     }
 
     // Fonction pour parser le M3U
@@ -2092,7 +1953,7 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
       channels.forEach(({ name, logo, url }) => {
         const channelDiv = document.createElement("li");
         channelDiv.className = "channel";
-        channelDiv.onclick = () => loadChannel(url, name);
+        channelDiv.onclick = () => loadChannel(url);
         channelDiv.innerHTML = `
           <img src="${logo || 'https://via.placeholder.com/80x45?text=No+Logo'}" alt="${name}" 
                onerror="this.src='https://via.placeholder.com/80x45?text=No+Logo'">
@@ -2109,12 +1970,6 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
         name.toLowerCase().includes(query)
       );
       displayChannels(filtered);
-      
-      // Charger une chaîne aléatoire si recherche vide
-      if (!query && filtered.length > 0) {
-        const randomChannel = filtered[Math.floor(Math.random() * filtered.length)];
-        loadChannel(randomChannel.url, randomChannel.name);
-      }
     }
 
     // Pop-up d'abonnement intelligent
@@ -2122,14 +1977,14 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
       if (!popupShown && (timeWatched > 120 || channelChanges > 3)) {
         popupShown = true;
         Swal.fire({
-          title: '<strong style="color: #FFD700">Visionnage limité détecté</strong>',
+          title: '<strong style="color: #FFD700">Fatigué des coupures?</strong>',
           html: `
-            <p style="color: white">La version Premium résout ces problèmes:</p>
+            <p style="color: white">La version Premium offre:</p>
             <ul style="text-align: left; margin: 20px 0; color: white; padding-left: 20px;">
-              <li>✓ Lecture continue sans limite de temps</li>
-              <li>✓ Qualité HD stable</li>
-              <li>✓ Accès à toutes les chaînes sans restriction</li>
+              <li>✓ Flux HD sans interruption</li>
+              <li>✓ Accès à toutes les 1500+ chaînes</li>
               <li>✓ Support technique prioritaire</li>
+              <li>✓ Pas de publicités</li>
             </ul>
             <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
               <button onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20au%20forfait%20mensuel%20Africa%20Box%20TV'" 
@@ -2146,8 +2001,8 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
           background: 'linear-gradient(135deg, #1e1e2f 0%, #03064a 100%)',
           showCloseButton: true,
           showCancelButton: true,
-          cancelButtonText: 'Continuer en version gratuite',
-          confirmButtonText: 'Je m\'abonne',
+          cancelButtonText: 'Plus tard',
+          confirmButtonText: 'Essai Gratuit',
           confirmButtonColor: '#FFD700',
           backdrop: 'rgba(0,0,0,0.8)'
         }).then((result) => {
@@ -2164,16 +2019,18 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
       if (referralCode) {
         localStorage.setItem('referralCode', referralCode);
         Swal.fire({
-          title: 'Demandez un Abonnement!',
+          title: 'Code de parrainage appliqué!',
           text: `Vous utilisez le code ${referralCode}. Vous et votre parrain gagnerez 7 jours gratuits si vous vous abonnez.`,
           icon: 'success'
         });
       }
       
       const shareBtn = document.createElement('a');
-      shareBtn.className = 'share-float';
+      shareBtn.className = 'whatsapp-float';
       shareBtn.href = "https://wa.me/?text=Découvrez%20Africa%20Box%20TV%20-%201500%20chaînes%20en%20streaming%20%0Ahttps://play.google.com/store/apps/details?id=rtb.aplinig";
-      shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+      shareBtn.innerHTML = '<i class="fab fa-share-alt"></i>';
+      shareBtn.style.right = '90px';
+      shareBtn.style.background = '#1e1e2f';
       document.body.appendChild(shareBtn);
     }
 
@@ -2203,36 +2060,17 @@ http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
       }, 60000);
     }
 
-    // Essai gratuit
-    function startFreeTrial() {
-      Swal.fire({
-        title: 'Essai Gratuit !',
-        html: `
-          <p>Profitez de 30 secondes gratuits sur Africa Box TV Premium!</p>
-          <p><small>Après cette période, votre accès sera automatiquement bloqué.</small></p>
-        `,
-        icon: 'success',
-        confirmButtonText: 'Fermer'
-      });
-      hasSubscribed = true;
-      minViewTime = 0; // Désactive la limitation de temps
-      resetCountdown();
-    }
-
     // Gestion des événements du lecteur
     videoPlayer.addEventListener('waiting', () => {
-      if (!bufferDetected) {
-        loadingOverlay.classList.add('active');
-      }
+      loadingOverlay.classList.add('active');
     });
 
     videoPlayer.addEventListener('playing', () => {
       loadingOverlay.classList.remove('active');
-      bufferDetected = false;
     });
 
     videoPlayer.addEventListener('error', () => {
-      handleStreamError('Erreur de lecture');
+      reloadStream();
     });
   </script>
 </body>
