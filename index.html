@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Africa Box - Streaming HD Sans Interruption</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/plyr@3.7.0/dist/plyr.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1e1e2f;
+      --secondary-color: #03064a;
+      --accent-color: #fffffe;
+      --bg-color: #0b0b12;
+      --text-color: #f87706;
+      --card-bg: rgba(255, 255, 255, 0.1);
+      --highlight-color: #f1faee;
+      --hover-color: rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+    }
+
+    .video-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50vh;
+      background: linear-gradient(to bottom, var(--primary-color), var(--bg-color));
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .search-bar {
+      padding: 20px;
+      text-align: center;
+      background: #0b0b12;
+      margin-top: 50vh;
+      position: relative;
+      z-index: 5;
+    }
+
+    .search-bar input {
+      width: 90%;
+      max-width: 600px;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      outline: none;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+    }
+
+    .channel-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin: 10px;
+      padding: 0;
+      list-style: none;
+      color: #1436a5;
+    }
+
+    .channel {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .channel img {
+      width: 80%;
+      border-radius: 12px;
+      transition: transform 0.3s ease;
+    }
+
+    .channel span {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .channel:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .channel:hover img {
+      transform: scale(1.1);
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 18px;
+      z-index: 1500;
+      visibility: hidden;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading-overlay.active {
+      visibility: visible;
+    }
+
+    .premium-overlay {
+      background: linear-gradient(135deg, #1e1e2f 0%, #03064a 100%);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .premium-content i.fas {
+      font-size: 3rem;
+      color: #FFD700;
+      margin-bottom: 20px;
+    }
+
+    .pricing {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 25px 0;
+    }
+
+    .plan {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      flex: 1;
+      position: relative;
+    }
+
+    .plan.recommended {
+      border: 2px solid #FFD700;
+    }
+
+    .badge {
+      position: absolute;
+      top: -10px;
+      right: 10px;
+      background: #FFD700;
+      color: #000;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+
+    .price {
+      font-size: 1.5rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    .period {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .subscribe-btn {
+      background: #FFD700;
+      color: #000;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .subscribe-btn:hover {
+      background: #fff;
+      transform: translateY(-2px);
+    }
+
+    .features {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .features p {
+      margin: 10px 0;
+    }
+
+    .whatsapp-float {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #25D366;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+      font-size: 30px;
+      animation: pulse 2s infinite;
+    }
+
+    .share-float {
+      position: fixed;
+      bottom: 20px;
+      right: 90px;
+      background: #1e1e2f;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+      font-size: 30px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .countdown {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+      .search-bar input {
+        width: 80%;
+      }
+      .channel-list {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+      .channel {
+        padding: 10px;
+      }
+      .channel img {
+        width: 100%;
+      }
+      .premium-overlay {
+        padding: 15px;
+      }
+      .pricing {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .video-container {
+        height: 30vh;
+      }
+      .video-container video {
+        height: 30vh;
+      }
+      .search-bar input {
+        width: 90%;
+      }
+      .share-float {
+        right: 80px;
+        bottom: 90px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .video-container {
+        height: 50vh;
+      }
+      .video-container video {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <div class="countdown" id="countdown">Lecture: 60s</div>
+    <video id="videoPlayer" class="plyr" controls autoplay>
+      <source id="videoSource" src="" type="application/x-mpegURL">
+      Votre navigateur ne supporte pas la vidéo.
+    </video>
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="premium-overlay">
+        <div class="premium-content">
+          <i class="fas fa-crown"></i>
+          <h3>Version Premium Disponible</h3>
+          <p>Profitez de 1500+ chaînes sans interruption en HD</p>
+          <div class="pricing">
+            <div class="plan">
+              <span class="price">3,000 FCFA</span>
+              <span class="period">/mois</span>
+              <button class="subscribe-btn" onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20au%20forfait%20mensuel%20Africa%20Box%20TV'">S'abonner</button>
+            </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Rechercher une chaîne..." onkeyup="filterChannels()">
+  </div>
+  
+  <center>
+    <button onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20à%20Africa%20Box%20TV'" 
+      style="margin-top: 1px; padding: 12px 50px; background: #FFD700; color: #000; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+      Je souhaite m'abonner
+    </button>
+  </center>
+
+  <ul class="channel-list" id="channelListSection"></ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.6/dist/plyr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.1/dist/sweetalert2.all.min.js"></script>
+  <script>
+    // Variables globales
+    const videoPlayer = document.getElementById("videoPlayer");
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const channelsList = document.getElementById("channelListSection");
+    const searchInput = document.getElementById("searchInput");
+    const countdownElement = document.getElementById("countdown");
+    let hls = null;
+    let currentSource = "";
+    let retryCount = 0;
+    const maxRetries = 5;
+    let timeWatched = 0;
+    let channelChanges = 0;
+    let popupShown = false;
+    let hasSubscribed = false;
+    let currentChannel = null;
+    let countdownInterval = null;
+    let minViewTime = 60; // 60 secondes minimum de lecture
+    let remainingTime = minViewTime;
+    let bufferDetected = false;
+
+    // Configuration du lecteur
+    const player = new Plyr(videoPlayer, {
+      quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] },
+      controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+      settings: ['quality', 'speed'],
+      autoplay: true
+    });
+
+    // Données M3U (exemple réduit)
+    const m3uData = `#EXTM3U
+#EXTINF:-1 tvg-id="" tvg-name="RTB" tvg-logo="http://103.176.90.118/picons-dino/logos/rtb.png" group-title="|AF| C+ AFRIQUE",RTB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356120.m3u8
+#EXTINF:-1 tvg-logo="https://lo1.in/af/rti1.png", RTI 1
+https://www.enovativecdn.com/rticdn/smil:rti1.smil/playlist.m3u8
+#EXTINF:-1 tvg-logo="https://lo1.in/af/rti2.png", RTI 2
+https://www.enovativecdn.com/rticdn/smil:rti2.smil/playlist.m3u8
+#EXTINF:-1 tvg-logo="https://imgs.search.brave.com/P3-QuqlXyDRHFDueEq8DxEUFA8SYq0zjZH1c6_bKjbY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly92aXBv/dHYuY29tL3dwLWNv/bnRlbnQvdXBsb2Fk/cy8yMDIyLzA2L2V2/aS10di1saXZlLXZp/cG90di1kZW1vY3Jh/dGljLUNvbmdvLnBu/Zw", EVIT TV
+https://stream.berosat.live:19360/evi-tv/evi-tv.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IVOIRE CHANNEL" tvg-logo="https://gamako.net/ivoirechannel.ci/wa_images/fichier%2012x.png" group-title="Côte d'Ivoire",IVOIRE CHANNEL
+https://video1.getstreamhosting.com:1936/8244/8244/playlist.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BENIE TV" tvg-logo="https://lo1.in/af/benie.png" group-title="Bénin",BENIE TV
+https://voozmedia.fun/benietv/livestream/playlist.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BURKINA INFO" tvg-logo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRp5ZEpX7eAwDeTY-i1R1fEtUivVH0i9QbwvaBM80DJhHooVQxmoFKGzUEM3KZ1MgLejA&usqp=CAU" group-title="Burkina Faso",BURKINA INFO
+http://69.64.57.208/burkinainfo/index.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELE SAHEL" tvg-logo="https://lo1.in/af/telesahel.png" group-title="Niger",TELE SAHEL
+http://69.64.57.208/telesahel/playlist.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTS 1" tvg-logo="https://lo1.in/af/rts.png" group-title="Sénégal",RTS 1
+http://69.64.57.208/rts1/playlist.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTG" tvg-logo="http://103.176.90.118/picons-dino/logos/RTG-TV.jpg" group-title="|AF| C+ AFRIQUE",RTG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356119.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTI 1" tvg-logo="http://103.176.90.118/picons-dino/logos/rti1.png" group-title="|AF| C+ AFRIQUE",RTI 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356118.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTL 9" tvg-logo="http://103.176.90.118/picons-dino/logos/rtl9.png" group-title="|AF| C+ AFRIQUE",RTL 9
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356117.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTNC" tvg-logo="http://103.176.90.118/picons-dino/logos/RTNC.png" group-title="|AF| C+ AFRIQUE",RTNC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356116.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTS 1" tvg-logo="http://103.176.90.118/picons-dino/logos/rts1.png" group-title="|AF| C+ AFRIQUE",RTS 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356115.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SEN TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SEN-TV.png" group-title="|AF| C+ AFRIQUE",SEN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356114.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BKF - BF1" tvg-logo="http://103.176.90.118/picons-dino/logos/BF1-TV.jpeg" group-title="|AF| AFRIQUE OTHERS",BKF - BF1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311480.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M7 MALI" tvg-logo="http://103.176.90.118/picons-dino/logos/M7-MALI.png" group-title="|AF| MALI",M7 MALI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311325.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TM1 TV" tvg-logo="http://103.176.90.118/picons/logos/TM1-TV.jpeg" group-title="|AF| MALI",TM1 TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/582471.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TM2" tvg-logo="http://103.176.90.118/picons-dino/logos/TM2-.jpg" group-title="|AF| MALI",TM2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311326.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTB" tvg-logo="http://103.176.90.118/picons-dino/logos/rtb.png" group-title="|AF| MALI",RTB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311327.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ORTB" tvg-logo="http://103.176.90.118/picons-dino/logos/ortb.png" group-title="|AF| MALI",ORTB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311328.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ORTM" tvg-logo="http://103.176.90.118/picons-dino/logos/ortm.png" group-title="|AF| MALI",ORTM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311329.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CHERIFLA" tvg-logo="http://103.176.90.118/picons-dino/logos/cheriflatv.png" group-title="|AF| MALI",CHERIFLA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311330.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICABLE" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICABLE-TV.png" group-title="|AF| MALI",AFRICABLE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311331.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ORTM 2" tvg-logo="http://103.176.90.118/picons-dino/logos/ortm.png" group-title="|AF| MALI",ORTM 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311332.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RENOUVEAU TV" tvg-logo="http://103.176.90.118/picons-dino/logos/RENOUVEAU-TV.png" group-title="|AF| MALI",RENOUVEAU TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/625496.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M7" tvg-logo="http://103.176.90.118/picons-dino/logos/M7-MALI.png" group-title="|AF| MALI",M7
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311333.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NIETA TV" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/NIETA.png" group-title="|AF| MALI",NIETA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/818831.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUNNA TV" tvg-logo="http://103.176.90.118/picons/logos/EUROPE/SUNNA.png" group-title="|AF| MALI",SUNNA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/830584.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV5 MONDE" tvg-logo="http://103.176.90.118/picons-dino/logos/tv5monde.png" group-title="|AF| AFRIQUE OTHERS",TV5 MONDE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311249.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOVELAS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/novelastv.png" group-title="|AF| AFRIQUE OTHERS",NOVELAS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311250.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICA-NEWS.png" group-title="|AF| AFRIQUE OTHERS",AFRICA NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311251.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICABLE" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICABLE-TV.png" group-title="|AF| AFRIQUE OTHERS",AFRICABLE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311252.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MY COMEDY" tvg-logo="http://103.176.90.118/picons-dino/logos/MY-COMEDY.jpeg" group-title="|AF| AFRIQUE OTHERS",MY COMEDY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311253.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DRTV" tvg-logo="http://103.176.90.118/picons-dino/logos/drtv.png" group-title="|AF| AFRIQUE OTHERS",DRTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311254.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ARISE NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/ARISE-NEWS.jpg" group-title="|AF| AFRIQUE OTHERS",ARISE NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311255.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA24" tvg-logo="http://103.176.90.118/picons-dino/logos/africa24.png" group-title="|AF| AFRIQUE OTHERS",AFRICA24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311256.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRO MUSIC MANDIGO" tvg-logo="http://103.176.90.118/picons-dino/logos/afromusic.png" group-title="|AF| AFRIQUE OTHERS",AFRO MUSIC MANDIGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311258.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRO MUSIC" tvg-logo="http://103.176.90.118/picons-dino/logos/afromusic.png" group-title="|AF| AFRIQUE OTHERS",AFRO MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311259.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DBMTV" tvg-logo="http://103.176.90.118/picons-dino/logos/music.png" group-title="|AF| AFRIQUE OTHERS",DBMTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311260.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HIT TV AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/HIT-TV-AFRICA.jpeg" group-title="|AF| AFRIQUE OTHERS",HIT TV AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311261.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DIGITAL BLACK MUSIC" tvg-logo="http://103.176.90.118/picons-dino/logos/DIGITAL-BLACK-MUSIC.png" group-title="|AF| AFRIQUE OTHERS",DIGITAL BLACK MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311262.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BLACK CLASSIC" tvg-logo="http://103.176.90.118/picons-dino/logos/music.png" group-title="|AF| AFRIQUE OTHERS",BLACK CLASSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311263.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BLACK AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/BLACK-AFRICA.png" group-title="|AF| AFRIQUE OTHERS",BLACK AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311264.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE URBAN" tvg-logo="http://103.176.90.118/picons-dino/logos/traceurban.png" group-title="|AF| AFRIQUE OTHERS",TRACE URBAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311265.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE TROPICAL" tvg-logo="http://103.176.90.118/picons-dino/logos/tracetropical.png" group-title="|AF| AFRIQUE OTHERS",TRACE TROPICAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311266.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE NAIJA" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-NAIJA.png" group-title="|AF| AFRIQUE OTHERS",TRACE NAIJA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311267.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/traceafrica.png" group-title="|AF| AFRIQUE OTHERS",TRACE AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311270.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE MISIKI" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-MISIKI.png" group-title="|AF| AFRIQUE OTHERS",TRACE MISIKI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311268.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE TOCA" tvg-logo="http://103.176.90.118/picons-dino/logos/tracetoca.png" group-title="|AF| AFRIQUE OTHERS",TRACE TOCA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311269.m3u8
+EXTINF:-1 tvg-id="" tvg-name="NEW WORLD MAGAZINE" tvg-logo="http://103.176.90.118/picons-dino/logos/NEW-WORLD-MAGAZINE.jpg" group-title="|AF| AFRIQUE OTHERS",NEW WORLD MAGAZINE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311427.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVT INTERNATIONAL" tvg-logo="http://103.176.90.118/picons-dino/logos/TVT-INTERNATIONAL.jpg" group-title="|AF| AFRIQUE OTHERS",TVT INTERNATIONAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311428.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVT" tvg-logo="http://103.176.90.118/picons-dino/logos/TVT.jpeg" group-title="|AF| AFRIQUE OTHERS",TVT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311429.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOVEE 4U" tvg-logo="http://103.176.90.118/picons-dino/logos/MOVEE-4U.jpg" group-title="|AF| AFRIQUE OTHERS",MOVEE 4U
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311431.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVGE" tvg-logo="http://103.176.90.118/picons-dino/logos/TVGE-.png" group-title="|AF| AFRIQUE OTHERS",TVGE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311433.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="WES AFRICA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/WES-AFRICA-TV.jpeg" group-title="|AF| AFRIQUE OTHERS",WES AFRICA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311434.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EVASION" tvg-logo="http://103.176.90.118/picons-dino/logos/evasion.jpg" group-title="|AF| AFRIQUE OTHERS",EVASION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311436.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EVASION TV" tvg-logo="http://103.176.90.118/picons/logos/evasion.jpg" group-title="|AF| AFRIQUE OTHERS",EVASION TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/727366.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GTV1" tvg-logo="http://103.176.90.118/picons/logos/GTV.png" group-title="|AF| AFRIQUE OTHERS",GTV1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/727364.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EVASION TV" tvg-logo="http://103.176.90.118/picons/logos/EUROPE/EVASION.png" group-title="|AF| AFRIQUE OTHERS",EVASION TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/822095.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTG" tvg-logo="http://103.176.90.118/picons-dino/logos/RTG-TV.jpg" group-title="|AF| AFRIQUE OTHERS",RTG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/727365.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NDIMBATV" tvg-logo="http://103.176.90.118/picons/logos/NDIMBATV.png" group-title="|AF| AFRIQUE OTHERS",NDIMBATV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/727363.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LEDJELY TV" tvg-logo="http://103.176.90.118/picons/logos/LEDJELY-TV.png" group-title="|AF| AFRIQUE OTHERS",LEDJELY TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/720313.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DJOMA TV" tvg-logo="http://103.176.90.118/picons/logos/DJOMA-TV.png" group-title="|AF| AFRIQUE OTHERS",DJOMA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/720312.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOURDINE TV" tvg-logo="http://103.176.90.118/picons/logos/NOURDINE.jpg" group-title="|AF| AFRIQUE OTHERS",NOURDINE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/720311.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTG" tvg-logo="http://103.176.90.118/picons-dino/logos/RTG-TV.jpg" group-title="|AF| AFRIQUE OTHERS",RTG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311435.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STAR 21" tvg-logo="http://103.176.90.118/picons-dino/logos/STAR-21-TV.png" group-title="|AF| AFRIQUE OTHERS",STAR 21
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311438.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CIS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/CIS-TV.jpg" group-title="|AF| AFRIQUE OTHERS",CIS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311437.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GUINNEA MUSIC" tvg-logo="http://103.176.90.118/picons-dino/logos/GUINNEA-MUSIC.jpg" group-title="|AF| AFRIQUE OTHERS",GUINNEA MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311439.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ESPACE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ESPACE-TV.jpeg" group-title="|AF| AFRIQUE OTHERS",ESPACE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311440.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BUZZ" tvg-logo="http://103.176.90.118/picons-dino/logos/BUZZ-TV.png" group-title="|AF| AFRIQUE OTHERS",BUZZ
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311441.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUNU YEUF" tvg-logo="http://103.176.90.118/picons-dino/logos/SUNU-YEUF.jpg" group-title="|AF| C+ AFRIQUE",SUNU YEUF
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356113.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SYFY" tvg-logo="http://103.176.90.118/picons-dino/logos/syfy.png" group-title="|AF| C+ AFRIQUE",SYFY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356112.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELETOON+" tvg-logo="http://103.176.90.118/picons-dino/logos/teletoonplus.png" group-title="|AF| C+ AFRIQUE",TELETOON+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356111.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TF1" tvg-logo="http://103.176.90.118/picons-dino/logos/tf1.png" group-title="|AF| C+ AFRIQUE",TF1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356110.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TF1 +1 HD" tvg-logo="http://103.176.90.118/picons/logos/france/TF1-PLUS-1.png" group-title="|AF| C+ AFRIQUE",TF1 +1 HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/816318.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TFM" tvg-logo="http://103.176.90.118/picons-dino/logos/tfm.png" group-title="|AF| C+ AFRIQUE",TFM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356109.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TFX" tvg-logo="http://103.176.90.118/picons-dino/logos/tfx.png" group-title="|AF| C+ AFRIQUE",TFX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356108.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TIJI" tvg-logo="http://103.176.90.118/picons-dino/logos/tiji.png" group-title="|AF| C+ AFRIQUE",TIJI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356107.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TOUTE L HISTOIRE" tvg-logo="http://103.176.90.118/picons-dino/logos/toutelhistoire.png" group-title="|AF| C+ AFRIQUE",TOUTE L HISTOIRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356106.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/traceafrica.png" group-title="|AF| C+ AFRIQUE",TRACE AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356105.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE AFRICA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/traceafrica.png" group-title="|AF| C+ AFRIQUE",TRACE AFRICA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356104.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE CARIBBEAN FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-CARIBBEAN.png" group-title="|AF| C+ AFRIQUE",TRACE CARIBBEAN FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356103.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE GOSPEL" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-GOSPEL.png" group-title="|AF| C+ AFRIQUE",TRACE GOSPEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356102.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE LATINA FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/tracelatina.png" group-title="|AF| C+ AFRIQUE",TRACE LATINA FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356101.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE RIKORA" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-RIKORA.png" group-title="|AF| C+ AFRIQUE",TRACE RIKORA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356100.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE TROPICAL FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/tracetropicalhd.png" group-title="|AF| C+ AFRIQUE",TRACE TROPICAL FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356099.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE URBAN" tvg-logo="http://103.176.90.118/picons-dino/logos/traceurban.png" group-title="|AF| C+ AFRIQUE",TRACE URBAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356098.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE URBAN FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/traceurbanhd.png" group-title="|AF| C+ AFRIQUE",TRACE URBAN FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356097.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TREK" tvg-logo="http://103.176.90.118/picons-dino/logos/trek.png" group-title="|AF| C+ AFRIQUE",TREK
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356096.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVT" tvg-logo="http://103.176.90.118/picons-dino/logos/TVT.jpeg" group-title="|AF| C+ AFRIQUE",TVT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356094.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ZEE MAGIC" tvg-logo="http://103.176.90.118/picons-dino/logos/ZEE-MAGIC.png" group-title="|AF| C+ AFRIQUE",ZEE MAGIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356093.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV5" tvg-logo="http://103.176.90.118/picons-dino/logos/tv5.png" group-title="|AF| C+ AFRIQUE",TV5
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356095.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LOVE NATURE" tvg-logo="http://103.176.90.118/picons-dino/logos/LOVE-NATURE-TV.png" group-title="|AF| C+ AFRIQUE",LOVE NATURE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721492.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE KITOKO" tvg-logo="http://103.176.90.118/picons-dino/logos/TRACE-KITOKO.png" group-title="|AF| C+ AFRIQUE",TRACE KITOKO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721491.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BANTAMBA" tvg-logo="http://103.176.90.118/picons-dino/logos/BANTAMBA-TV.png" group-title="|AF| C+ AFRIQUE",BANTAMBA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721490.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EDAN" tvg-logo="http://103.176.90.118/picons-dino/logos/EDAN-TV.png" group-title="|AF| C+ AFRIQUE",EDAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721488.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="WATA" tvg-logo="http://103.176.90.118/picons-dino/logos/WATA-TV.jpeg" group-title="|AF| C+ AFRIQUE",WATA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721489.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RWANDA TV (RTV)" tvg-logo="http://103.176.90.118/picons/logos/logos/TV-1-RWANDA.png" group-title="|AF| C+ AFRIQUE",RWANDA TV (RTV)
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721487.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUD 1ERE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SUD-1ERE-TV.jpeg" group-title="|AF| C+ AFRIQUE",SUD 1ERE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721486.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VOX AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/VOX-AFRICA.png" group-title="|AF| C+ AFRIQUE",VOX AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721485.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ TOP 14 FuLL HD" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL+-TOP-14.png" group-title="|AF| C+ AFRIQUE",CANAL+ TOP 14 FuLL HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721484.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ MOTO GP FuLL HD" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL+-MOTO-GP.png" group-title="|AF| C+ AFRIQUE",CANAL+ MOTO GP FuLL HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721483.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LERAL TV" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/LERAL.png" group-title="|AF| C+ AFRIQUE",LERAL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721482.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PACIS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/PACIS-TV.png" group-title="|AF| C+ AFRIQUE",PACIS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721528.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BTN RWANDA" tvg-logo="http://103.176.90.118/picons-dino/logos/BTN-RWANDA.jpeg" group-title="|AF| C+ AFRIQUE",BTN RWANDA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721527.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOLIERE TV" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/MOLIERE-TV.jpg" group-title="|AF| C+ AFRIQUE",MOLIERE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/826495.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GENESIS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GENESIS-TV.jpeg" group-title="|AF| C+ AFRIQUE",GENESIS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721526.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FLASH TV RWANDA" tvg-logo="http://103.176.90.118/picons-dino/logos/FLASH-TV-AF.jpeg" group-title="|AF| C+ AFRIQUE",FLASH TV RWANDA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721525.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AUTHENTIC TV RWANDA" tvg-logo="http://103.176.90.118/picons-dino/logos/%20AUTHENTIC-TV.png" group-title="|AF| C+ AFRIQUE",AUTHENTIC TV RWANDA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721524.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV 1 RWANDA" tvg-logo="http://103.176.90.118/picons-dino/logos/BTN-RWANDA.jpeg" group-title="|AF| C+ AFRIQUE",TV 1 RWANDA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721523.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KC 2 TV" tvg-logo="http://103.176.90.118/picons-dino/logos/KC-2-TV.jpeg" group-title="|AF| C+ AFRIQUE",KC 2 TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721522.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV 10" tvg-logo="http://103.176.90.118/picons-dino/logos/tv10.png" group-title="|AF| C+ AFRIQUE",TV 10
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721521.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TGB" tvg-logo="http://103.176.90.118/picons-dino/logos/TGB.png" group-title="|AF| C+ AFRIQUE",TGB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721520.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTNB" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/RTNB.jpg" group-title="|AF| C+ AFRIQUE",RTNB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721519.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CRTV SPORT" tvg-logo="http://103.176.90.118/picons-dino/logos/CRTV-SPORT.png" group-title="|AF| C+ AFRIQUE",CRTV SPORT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721518.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SAHARA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SAHARA-TV.jpeg" group-title="|AF| C+ AFRIQUE",SAHARA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721517.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ELECTRON TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ELECTRON-TV.jpeg" group-title="|AF| C+ AFRIQUE",ELECTRON TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721516.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LIFE TV" tvg-logo="http://103.176.90.118/picons/logos/EUROPE/LIFE-TV.png" group-title="|AF| C+ AFRIQUE",LIFE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721515.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BONFEREY" tvg-logo="http://103.176.90.118/picons-dino/logos/BONFEREY-TV.png" group-title="|AF| C+ AFRIQUE",BONFEREY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721514.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DOUNIA" tvg-logo="http://103.176.90.118/picons-dino/logos/DOUNIA-TV.png" group-title="|AF| C+ AFRIQUE",DOUNIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721513.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTN TELE SAHEL - NIGER" tvg-logo="http://103.176.90.118/picons-dino/logos/RTN-TELE-SAHEL-NIGER.png" group-title="|AF| C+ AFRIQUE",RTN TELE SAHEL - NIGER
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721512.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="eTELE" tvg-logo="http://103.176.90.118/picons-dino/logos/eTELE.jpeg" group-title="|AF| C+ AFRIQUE",eTELE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721511.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVC BENINOISE" tvg-logo="http://103.176.90.118/picons-dino/logos/TVC-BENINOISE.jpeg" group-title="|AF| C+ AFRIQUE",TVC BENINOISE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721510.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOLF TV AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/GOLF-TV-AFRICA.jpeg" group-title="|AF| C+ AFRIQUE",GOLF TV AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721509.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL 3 BENIN" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL-3-BENIN.png" group-title="|AF| C+ AFRIQUE",CANAL 3 BENIN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721508.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TLS AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/TLS-AFRICA.jpeg" group-title="|AF| C+ AFRIQUE",TLS AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721507.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV7" tvg-logo="http://103.176.90.118/picons-dino/logos/TV7-AFRICA.jpeg" group-title="|AF| C+ AFRIQUE",TV7
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721506.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV MAURITANIE" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-MAURITANIE.jpeg" group-title="|AF| C+ AFRIQUE",TV MAURITANIE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721505.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV TOGO" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-TOGO.png" group-title="|AF| C+ AFRIQUE",TV TOGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721504.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL 3 BURKINABé" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL-3-BURKINABe.jpeg" group-title="|AF| C+ AFRIQUE",CANAL 3 BURKINABé
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721503.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SAVANE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SAVANE-TV.jpeg" group-title="|AF| C+ AFRIQUE",SAVANE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721502.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BURKINA INFO TV" tvg-logo="http://103.176.90.118/picons-dino/logos/BURKINA-INFO-TV.jpeg" group-title="|AF| C+ AFRIQUE",BURKINA INFO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721501.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="JOLIBA NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/JOLIBA-NEWS.jpg" group-title="|AF| C+ AFRIQUE",JOLIBA NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721499.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MANDE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/MANDE-TV.png" group-title="|AF| C+ AFRIQUE",MANDE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721498.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AL AFIA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/AL-AFIA-TV.png" group-title="|AF| C+ AFRIQUE",AL AFIA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721497.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RENOUVEAU" tvg-logo="http://103.176.90.118/picons-dino/logos/RENOUVEAU-TV.png" group-title="|AF| C+ AFRIQUE",RENOUVEAU
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721496.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IVOIRE MUSIC TV" tvg-logo="http://103.176.90.118/picons-dino/logos/IVOIRE-MUSIC-TV.jpeg" group-title="|AF| C+ AFRIQUE",IVOIRE MUSIC TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721495.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IQRAA EUROPE AFRIQUE" tvg-logo="http://103.176.90.118/picons-dino/logos/IQRAA-EUROPE-AFRIQUE.png" group-title="|AF| C+ AFRIQUE",IQRAA EUROPE AFRIQUE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721494.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A+ IVOIRE" tvg-logo="http://103.176.90.118/picons-dino/logos/A+-IVOIRE.png" group-title="|AF| C+ AFRIQUE",A+ IVOIRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721493.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VOIR+" tvg-logo="http://103.176.90.118/picons-dino/logos/VOIR+-TV.jpeg" group-title="|AF| C+ AFRIQUE",VOIR+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721481.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ EVENEMENT AFRICA" tvg-logo="http://103.176.90.118/picons/logos/SPAIN/CANAL-EVENEMENT-AFRIC.png" group-title="|AF| C+ AFRIQUE",CANAL+ EVENEMENT AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1119405.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ SPORT 1" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-SPORT-1.png" group-title="|AF| C+ AFRIQUE",CANAL+ SPORT 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356183.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ SPORT 2" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-SPORT-2.png" group-title="|AF| C+ AFRIQUE",CANAL+ SPORT 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356182.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ SPORT 3" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-SPORT-3.png" group-title="|AF| C+ AFRIQUE",CANAL+ SPORT 3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356181.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ SPORT 4" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-SPORT-4.png" group-title="|AF| C+ AFRIQUE",CANAL+ SPORT 4
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356180.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ SPORT 5" tvg-logo="http://103.176.90.118/picons-dino/logos/canalplussporthd.png" group-title="|AF| C+ AFRIQUE",CANAL+ SPORT 5
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356179.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ ACTION OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL+-ACTION.png" group-title="|AF| C+ AFRIQUE",CANAL+ ACTION OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356178.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ CENTR" tvg-logo="http://103.176.90.118/picons-dino/logos/canalplushd.png" group-title="|AF| C+ AFRIQUE",CANAL+ CENTR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356177.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ CINEMA OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/canalpluscinema.png" group-title="|AF| C+ AFRIQUE",CANAL+ CINEMA OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356176.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ COMEDIE OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL+-COMEDIE.png" group-title="|AF| C+ AFRIQUE",CANAL+ COMEDIE OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356175.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ ELLES OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL+-ELLES.png" group-title="|AF| C+ AFRIQUE",CANAL+ ELLES OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356174.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ FAMILY OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/canalplusfamily.png" group-title="|AF| C+ AFRIQUE",CANAL+ FAMILY OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356173.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ OUEST" tvg-logo="http://103.176.90.118/picons-dino/logos/canalplus.png" group-title="|AF| C+ AFRIQUE",CANAL+ OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356172.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C+ PREMIER" tvg-logo="http://103.176.90.118/picons/logos/canalplus.png" group-title="|AF| C+ AFRIQUE",C+ PREMIER
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/667908.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C+ PREMIERE OUEST" tvg-logo="http://103.176.90.118/picons/logos/canalplus.png" group-title="|AF| C+ AFRIQUE",C+ PREMIERE OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/667910.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C+ PREMIERE CENTRE" tvg-logo="http://103.176.90.118/picons/logos/canalplus.png" group-title="|AF| C+ AFRIQUE",C+ PREMIERE CENTRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/667941.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C+ POP OUEST" tvg-logo="http://103.176.90.118/picons/logos/logos/C-PLUS-POP-OUEST.png" group-title="|AF| C+ AFRIQUE",C+ POP OUEST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/644207.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C+ POP CENTRE" tvg-logo="http://103.176.90.118/picons/logos/logos/C-PLUS-POP-CENTRE.png" group-title="|AF| C+ AFRIQUE",C+ POP CENTRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/644208.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="7INFO" tvg-logo="http://103.176.90.118/picons-dino/logos/7-INFO-TV.jpeg" group-title="|AF| C+ AFRIQUE",7INFO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/644206.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A PLUS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/aplus.png" group-title="|AF| C+ AFRIQUE",A PLUS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356171.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A+ INTERNATIONAL" tvg-logo="http://103.176.90.118/picons-dino/logos/aplus.png" group-title="|AF| C+ AFRIQUE",A+ INTERNATIONAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356170.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOLLYWOOD EPIC" tvg-logo="http://103.176.90.118/picons-dino/logos/NOLLYWOOD-EPIC.png" group-title="|AF| C+ AFRIQUE",NOLLYWOOD EPIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356169.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOLLYWOOD UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/nollywoodtv.png" group-title="|AF| C+ AFRIQUE",NOLLYWOOD UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356168.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOVELAS TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/novelastv.png" group-title="|AF| C+ AFRIQUE",NOVELAS TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356167.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MEDIA PRIME" tvg-logo="http://103.176.90.118/picons-dino/logos/MEDIA-PRIME-TV.png" group-title="|AF| C+ AFRIQUE",MEDIA PRIME
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/619237.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="2STV" tvg-logo="http://103.176.90.118/picons-dino/logos/2STV-.png" group-title="|AF| C+ AFRIQUE",2STV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356166.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AB1" tvg-logo="http://103.176.90.118/picons-dino/logos/ab1.png" group-title="|AF| C+ AFRIQUE",AB1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356165.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ACTION" tvg-logo="http://103.176.90.118/picons-dino/logos/action.png" group-title="|AF| C+ AFRIQUE",ACTION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356164.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICABLE" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICABLE-TV.png" group-title="|AF| C+ AFRIQUE",AFRICABLE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356163.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA TV CULTURE" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICA-TV-CULTURE.jpeg" group-title="|AF| C+ AFRIQUE",AFRICA TV CULTURE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/706893.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROCULTURE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/AFROCULTURE-TV.png" group-title="|AF| C+ AFRIQUE",AFROCULTURE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/706895.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ANIMAUX" tvg-logo="http://103.176.90.118/picons-dino/logos/animaux.png" group-title="|AF| C+ AFRIQUE",ANIMAUX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356162.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AUTOMOTO" tvg-logo="http://103.176.90.118/picons-dino/logos/automoto.png" group-title="|AF| C+ AFRIQUE",AUTOMOTO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356160.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ANTENNEA" tvg-logo="http://103.176.90.118/picons-dino/logos/antenna.png" group-title="|AF| C+ AFRIQUE",ANTENNEA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356161.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ANTENNE REUNION" tvg-logo="http://103.176.90.118/picons/logos/ANTENNE-REUNION.jpeg" group-title="|AF| C+ AFRIQUE",ANTENNE REUNION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/681396.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="REUNION 1ERE" tvg-logo="http://103.176.90.118/picons/logos/REUNION-1ERE.png" group-title="|AF| C+ AFRIQUE",REUNION 1ERE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/681397.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="B-ONE" tvg-logo="http://103.176.90.118/picons-dino/logos/B-ONE.jpeg" group-title="|AF| C+ AFRIQUE",B-ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356159.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BBLACK AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/BBLACK--AFRICA.png" group-title="|AF| C+ AFRIQUE",BBLACK AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356158.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BET" tvg-logo="http://103.176.90.118/picons-dino/logos/bet.png" group-title="|AF| C+ AFRIQUE",BET
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356157.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C8" tvg-logo="http://103.176.90.118/picons-dino/logos/c8.png" group-title="|AF| C+ AFRIQUE",C8
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356156.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL 2 INTERNATIONAL" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL2-INTERNATIONAL.jpeg" group-title="|AF| C+ AFRIQUE",CANAL 2 INTERNATIONAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356155.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CHERIFLA" tvg-logo="http://103.176.90.118/picons-dino/logos/cheriflatv.png" group-title="|AF| C+ AFRIQUE",CHERIFLA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356154.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CNEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/cnews.png" group-title="|AF| C+ AFRIQUE",CNEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356153.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CRTV" tvg-logo="http://103.176.90.118/picons-dino/logos/CRTV-.png" group-title="|AF| C+ AFRIQUE",CRTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356152.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CUISINES" tvg-logo="http://103.176.90.118/picons-dino/logos/CUISINES-TV.jpeg" group-title="|AF| C+ AFRIQUE",CUISINES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356151.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DISCOVERY CHANNEL" tvg-logo="http://103.176.90.118/picons-dino/logos/discoverychannel.png" group-title="|AF| C+ AFRIQUE",DISCOVERY CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356150.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DISNEY CHANNEL" tvg-logo="http://103.176.90.118/picons-dino/logos/disneychannel.png" group-title="|AF| C+ AFRIQUE",DISNEY CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356149.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DISNEY JUNIOR" tvg-logo="http://103.176.90.118/picons-dino/logos/disneyjunior.png" group-title="|AF| C+ AFRIQUE",DISNEY JUNIOR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356148.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ENGLISH CLUB TV" tvg-logo="http://103.176.90.118/picons-dino/logos/englishclubtv.png" group-title="|AF| C+ AFRIQUE",ENGLISH CLUB TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356147.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ES1" tvg-logo="http://103.176.90.118/picons-dino/logos/es1.png" group-title="|AF| C+ AFRIQUE",ES1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356145.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EUROSPORT 1" tvg-logo="http://103.176.90.118/picons-dino/logos/eurosport1.png" group-title="|AF| C+ AFRIQUE",EUROSPORT 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356144.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EUROSPORT 2" tvg-logo="http://103.176.90.118/picons-dino/logos/eurosport2.png" group-title="|AF| C+ AFRIQUE",EUROSPORT 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356143.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FRANCE 2" tvg-logo="http://103.176.90.118/picons-dino/logos/france2.png" group-title="|AF| C+ AFRIQUE",FRANCE 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356142.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FRANCE 24" tvg-logo="http://103.176.90.118/picons-dino/logos/france24.png" group-title="|AF| C+ AFRIQUE",FRANCE 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356141.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GABON TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GABON-TV.jpg" group-title="|AF| C+ AFRIQUE",GABON TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356140.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GAME ONE" tvg-logo="http://103.176.90.118/picons-dino/logos/gameone.png" group-title="|AF| C+ AFRIQUE",GAME ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356139.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GULLI AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/GULLI-AFRICA.png" group-title="|AF| C+ AFRIQUE",GULLI AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356138.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="J-ONE" tvg-logo="http://103.176.90.118/picons-dino/logos/jone.png" group-title="|AF| C+ AFRIQUE",J-ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356136.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KALAC" tvg-logo="http://103.176.90.118/picons-dino/logos/KALAC-TV.png" group-title="|AF| C+ AFRIQUE",KALAC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/682060.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LCI" tvg-logo="http://103.176.90.118/picons-dino/logos/lci.png" group-title="|AF| C+ AFRIQUE",LCI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356135.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LUDIKIDS" tvg-logo="http://103.176.90.118/picons-dino/logos/LUDIKIDS.jpeg" group-title="|AF| C+ AFRIQUE",LUDIKIDS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356134.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M6 INTERNATIONAL" tvg-logo="http://103.176.90.118/picons-dino/logos/M6-INTERNATIONAL.jpeg" group-title="|AF| C+ AFRIQUE",M6 INTERNATIONAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356133.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MABOKE TV" tvg-logo="http://103.176.90.118/picons/logos/MABOKETV.png" group-title="|AF| C+ AFRIQUE",MABOKE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/682354.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MANGAS" tvg-logo="http://103.176.90.118/picons-dino/logos/mangas.png" group-title="|AF| C+ AFRIQUE",MANGAS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356132.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV FRANCE" tvg-logo="http://103.176.90.118/picons-dino/logos/mtv.png" group-title="|AF| C+ AFRIQUE",MTV FRANCE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356131.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV HITS" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvhits.png" group-title="|AF| C+ AFRIQUE",MTV HITS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356130.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NAT GEO WILD" tvg-logo="http://103.176.90.118/picons-dino/logos/natgeowild.png" group-title="|AF| C+ AFRIQUE",NAT GEO WILD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356129.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NATIONAL GEOGRAPHIC" tvg-logo="http://103.176.90.118/picons-dino/logos/nationalgeographic.png" group-title="|AF| C+ AFRIQUE",NATIONAL GEOGRAPHIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356128.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NBA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/NBA_TV.png" group-title="|AF| C+ AFRIQUE",NBA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356127.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NICKELODEON" tvg-logo="http://103.176.90.118/picons-dino/logos/nickelodeon.png" group-title="|AF| C+ AFRIQUE",NICKELODEON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356126.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ORTB" tvg-logo="http://103.176.90.118/picons-dino/logos/ortb.png" group-title="|AF| C+ AFRIQUE",ORTB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356125.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ORTM" tvg-logo="http://103.176.90.118/picons-dino/logos/ortm.png" group-title="|AF| C+ AFRIQUE",ORTM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356124.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PIWI+" tvg-logo="http://103.176.90.118/picons-dino/logos/piwiplus.png" group-title="|AF| C+ AFRIQUE",PIWI+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356123.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PLANETE+" tvg-logo="http://103.176.90.118/picons-dino/logos/planeteplus.png" group-title="|AF| C+ AFRIQUE",PLANETE+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356122.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RMC SPORT 4" tvg-logo="http://103.176.90.118/picons-dino/logos/rmcsport4.png" group-title="|AF| C+ AFRIQUE",RMC SPORT 4
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/356121.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OUEST TV" tvg-logo="http://103.176.90.118/picons-dino/logos/OUEST-TV.jpeg" group-title="|AF| CONGO/GABON",OUEST TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311314.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="B-ONE" tvg-logo="http://103.176.90.118/picons-dino/logos/B-ONE.jpeg" group-title="|AF| CONGO/GABON",B-ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311316.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTNC" tvg-logo="http://103.176.90.118/picons-dino/logos/RTNC.png" group-title="|AF| CONGO/GABON",RTNC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311318.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DRTV" tvg-logo="http://103.176.90.118/picons-dino/logos/drtv.png" group-title="|AF| CONGO/GABON",DRTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311320.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV CONGO" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-CONGO.png" group-title="|AF| CONGO/GABON",TV CONGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311321.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VOX TV" tvg-logo="http://103.176.90.118/picons-dino/logos/vox.png" group-title="|AF| CONGO/GABON",VOX TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311322.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DIGITAL CONGO  " tvg-logo="http://103.176.90.118/picons-dino/logos/DIGITAL-CONGO.jpeg" group-title="|AF| CONGO/GABON",DIGITAL CONGO  
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/559864.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ANTENNE A" tvg-logo="http://103.176.90.118/picons-dino/logos/ANTENNE-A.png" group-title="|AF| CONGO/GABON",ANTENNE A
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/559863.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTG" tvg-logo="http://103.176.90.118/picons-dino/logos/RTG-TV.jpg" group-title="|AF| CONGO/GABON",RTG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/559862.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELE CONGO" tvg-logo="http://103.176.90.118/picons-dino/logos/telecongo.png" group-title="|AF| CONGO/GABON",TELE CONGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/559861.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MIKUBA TV CONGO" tvg-logo="" group-title="|AF| CONGO/GABON",MIKUBA TV CONGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/779816.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MISHAPI" tvg-logo="" group-title="|AF| CONGO/GABON",MISHAPI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/779814.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NYOTA" tvg-logo="" group-title="|AF| CONGO/GABON",NYOTA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/779815.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GABON TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GABON-TV.jpg" group-title="|AF| CONGO/GABON",GABON TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/714252.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GABON CULTURE" tvg-logo="http://103.176.90.118/picons-dino/logos/Gabon-Culture.png" group-title="|AF| CONGO/GABON",GABON CULTURE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/714251.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GABON 24" tvg-logo="http://103.176.90.118/picons-dino/logos/GABON-24.jpg" group-title="|AF| CONGO/GABON",GABON 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/711395.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELE AFRICA GABON" tvg-logo="http://103.176.90.118/picons-dino/logos/TELE-AFRICA-GB.png" group-title="|AF| CONGO/GABON",TELE AFRICA GABON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/711394.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GABON 24" tvg-logo="http://103.176.90.118/picons-dino/logos/GABON-24.jpg" group-title="|AF| CONGO/GABON",GABON 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311486.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DIVIN AMOUR TV" tvg-logo="http://103.176.90.118/picons-dino/logos/DIVIN-AMOUR-TV.png" group-title="|AF| CAMEROON",DIVIN AMOUR TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311335.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LTM" tvg-logo="http://103.176.90.118/picons-dino/logos/LTM-.jpeg" group-title="|AF| CAMEROON",LTM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311336.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRIQUE MEDIA" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/AFRIQUE-MEDIA.png" group-title="|AF| CAMEROON",AFRIQUE MEDIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311337.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRIQUE MEDIA" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/AFRIQUE-MEDIA.png" group-title="|AF| CAMEROON",AFRIQUE MEDIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311338.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VISION 4 TV" tvg-logo="http://103.176.90.118/picons-dino/logos/VISION-4-TV.jpg" group-title="|AF| CAMEROON",VISION 4 TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311339.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PALMIER TV" tvg-logo="http://103.176.90.118/picons-dino/logos/PALMIER-TV.jpg" group-title="|AF| CAMEROON",PALMIER TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311340.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL2 MOVIES" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL2-MOVIES.png" group-title="|AF| CAMEROON",CANAL2 MOVIES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311341.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL2" tvg-logo="http://103.176.90.118/picons-dino/logos/CANAL-2.jpg" group-title="|AF| CAMEROON",CANAL2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311342.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CRTV" tvg-logo="http://103.176.90.118/picons-dino/logos/CRTV-.png" group-title="|AF| CAMEROON",CRTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311344.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CRTV NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/CRTV-NEWS.png" group-title="|AF| CAMEROON",CRTV NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311343.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CRTV SPORT" tvg-logo="http://103.176.90.118/picons/logos/logos/CRTV-SPORT.png" group-title="|AF| CAMEROON",CRTV SPORT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1116413.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EQUINOXE" tvg-logo="http://103.176.90.118/picons-dino/logos/EQUINOXE-TV.jpeg" group-title="|AF| CAMEROON",EQUINOXE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311345.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STV" tvg-logo="http://103.176.90.118/picons-dino/logos/stv.jpg" group-title="|AF| CAMEROON",STV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311346.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="3ABN INTERNATIONAL" tvg-logo="http://103.176.90.118/picons-dino/logos/3abninternational.png" group-title="|AF| GHANA",3ABN INTERNATIONAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311349.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="3ABN KIDS" tvg-logo="http://103.176.90.118/picons-dino/logos/3ABN-.png" group-title="|AF| GHANA",3ABN KIDS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311350.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OBICE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/OBICE--.jpg" group-title="|AF| GHANA",OBICE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311351.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OMEGATV" tvg-logo="http://103.176.90.118/picons-dino/logos/OMEGATV-.jpg" group-title="|AF| GHANA",OMEGATV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311352.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OGYABA" tvg-logo="http://103.176.90.118/picons-dino/logos/OGYABA-TV.jpeg" group-title="|AF| GHANA",OGYABA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311353.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ROCK TV" tvg-logo="http://103.176.90.118/picons-dino/logos/rocktv.png" group-title="|AF| GHANA",ROCK TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311354.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GH CANADA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GH-CANADA-TV.png" group-title="|AF| GHANA",GH CANADA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311355.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MFM" tvg-logo="http://103.176.90.118/picons-dino/logos/mfm.png" group-title="|AF| GHANA",MFM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311356.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ADOM TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ADOM-TV.jpeg" group-title="|AF| GHANA",ADOM TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311357.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GHANA KESSBEN TV" tvg-logo="http://103.176.90.118/picons-dino/logos/KESSBEN-TV.jpeg" group-title="|AF| GHANA",GHANA KESSBEN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311358.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="METRO TV" tvg-logo="http://103.176.90.118/picons-dino/logos/metrotv.png" group-title="|AF| GHANA",METRO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311359.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ATINKA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ATINKA-TV.png" group-title="|AF| GHANA",ATINKA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311360.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ROYAL TV" tvg-logo="http://103.176.90.118/picons-dino/logos/royaltv.png" group-title="|AF| GHANA",ROYAL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311361.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="UTV" tvg-logo="http://103.176.90.118/picons-dino/logos/utv.png" group-title="|AF| GHANA",UTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311362.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BEN" tvg-logo="http://103.176.90.118/picons-dino/logos/ben.png" group-title="|AF| GHANA",BEN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311363.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ROK TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ROK-TV.jpeg" group-title="|AF| GHANA",ROK TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311364.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV3" tvg-logo="http://103.176.90.118/picons-dino/logos/tv3.png" group-title="|AF| GHANA",TV3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311365.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GTV" tvg-logo="http://103.176.90.118/picons-dino/logos/gtv.jpg" group-title="|AF| GHANA",GTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311367.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GH ONE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GH-ONE-TV.png" group-title="|AF| GHANA",GH ONE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311368.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="JOY NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/JOY-NEWS.jpg" group-title="|AF| GHANA",JOY NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311369.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="JOY PRIME" tvg-logo="http://103.176.90.118/picons-dino/logos/JOY-PRIME.png" group-title="|AF| GHANA",JOY PRIME
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311370.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HOPE CHANNEL AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/hopechannel.png" group-title="|AF| GHANA",HOPE CHANNEL AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311371.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STUDIO1 TV" tvg-logo="http://103.176.90.118/picons-dino/logos/STUDIO1-TV.png" group-title="|AF| GHANA",STUDIO1 TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311372.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTA AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/mtaafrica.png" group-title="|AF| GHANA",MTA AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311373.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GHANA BROADCASTING" tvg-logo="http://103.176.90.118/picons-dino/logos/GHANA-BROADCASTING.png" group-title="|AF| GHANA",GHANA BROADCASTING
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311374.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ADOME TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ADOME-TV.png" group-title="|AF| GHANA",ADOME TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311375.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KESSBEN TV" tvg-logo="http://103.176.90.118/picons-dino/logos/KESSBEN-TV.jpeg" group-title="|AF| GHANA",KESSBEN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311376.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GTV GOV TV" tvg-logo="http://103.176.90.118/picons-dino/logos/GTV-GOV-TV.jpg" group-title="|AF| GHANA",GTV GOV TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311377.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RAVE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/RAVE-TV.jpeg" group-title="|AF| NIGERIA",RAVE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311379.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOSPEL LIFE" tvg-logo="http://103.176.90.118/picons-dino/logos/GOSPEL-LIFE.jpeg" group-title="|AF| NIGERIA",GOSPEL LIFE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311380.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOSPEL MUSIC 4U" tvg-logo="http://103.176.90.118/picons-dino/logos/GOSPEL-4U.png" group-title="|AF| NIGERIA",GOSPEL MUSIC 4U
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311381.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NTA LIVE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/NTA-LIVE-TV.jpg" group-title="|AF| NIGERIA",NTA LIVE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311382.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NTA NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/NTA-NEWS.jpg" group-title="|AF| NIGERIA",NTA NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311383.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FUSION PLUS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/FUSION-PLUS-TV.jpg" group-title="|AF| NIGERIA",FUSION PLUS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311384.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMMANUEL TV" tvg-logo="http://103.176.90.118/picons-dino/logos/emmanuel.png" group-title="|AF| NIGERIA",EMMANUEL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311385.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOLLYWOOD MOVIES" tvg-logo="http://103.176.90.118/picons-dino/logos/nollywoodmovies.png" group-title="|AF| NIGERIA",NOLLYWOOD MOVIES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311386.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NOLLYWOOD FRANCE" tvg-logo="http://103.176.90.118/picons-dino/logos/nollywoodtv.png" group-title="|AF| NIGERIA",NOLLYWOOD FRANCE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311387.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LAGOS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/LAGOS-TV.png" group-title="|AF| NIGERIA",LAGOS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311388.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A+ UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/aplus.png" group-title="|AF| NIGERIA",A+ UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311389.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HI IMPACTS" tvg-logo="http://103.176.90.118/picons-dino/logos/HI-IMPACTS-TV.jpeg" group-title="|AF| NIGERIA",HI IMPACTS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311390.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FOURSQUAREE" tvg-logo="http://103.176.90.118/picons-dino/logos/FOURSQUAREE.png" group-title="|AF| NIGERIA",FOURSQUAREE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311391.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="YANGA!" tvg-logo="http://103.176.90.118/picons-dino/logos/yangatv.png" group-title="|AF| NIGERIA",YANGA!
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311392.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVC NEWS" tvg-logo="http://103.176.90.118/picons-dino/logos/tvcnews.png" group-title="|AF| NIGERIA",TVC NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311393.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CHANNELS 24" tvg-logo="http://103.176.90.118/picons-dino/logos/channels24.png" group-title="|AF| NIGERIA",CHANNELS 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311394.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DUNAMIS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/dunamistv.png" group-title="|AF| NIGERIA",DUNAMIS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311395.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KINGSWORLD TV" tvg-logo="http://103.176.90.118/picons-dino/logos/KINGSWORLD-TV.jpg" group-title="|AF| NIGERIA",KINGSWORLD TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311396.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DOVE" tvg-logo="http://103.176.90.118/picons-dino/logos/dovetv.png" group-title="|AF| NIGERIA",DOVE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311397.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOD TV" tvg-logo="http://103.176.90.118/picons-dino/logos/godtv.png" group-title="|AF| NIGERIA",GOD TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311398.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LOVEWORLD PLUS" tvg-logo="http://103.176.90.118/picons-dino/logos/loveworldtv.png" group-title="|AF| NIGERIA",LOVEWORLD PLUS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311399.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LOVEWORLD SAT TV" tvg-logo="http://103.176.90.118/picons-dino/logos/loveworldtv.png" group-title="|AF| NIGERIA",LOVEWORLD SAT TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311400.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV CONTINTENTAL" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-CONTINTENTAL.jpeg" group-title="|AF| NIGERIA",TV CONTINTENTAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311401.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LIBERATION TV" tvg-logo="http://103.176.90.118/picons-dino/logos/LIBERATION-TV.jpg" group-title="|AF| NIGERIA",LIBERATION TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311402.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MORE GRACE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/MORE-GRACE-TV.jpg" group-title="|AF| NIGERIA",MORE GRACE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311403.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EKO4SHOW" tvg-logo="http://103.176.90.118/picons-dino/logos/EKO4SHOW.jpg" group-title="|AF| NIGERIA",EKO4SHOW
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311404.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BET" tvg-logo="http://103.176.90.118/picons-dino/logos/bet.png" group-title="|AF| NIGERIA",BET
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311405.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BIAFRA" tvg-logo="http://103.176.90.118/picons-dino/logos/BIAFRA-TV.png" group-title="|AF| NIGERIA",BIAFRA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311406.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BRIDETV" tvg-logo="http://103.176.90.118/picons-dino/logos/BRIDE-TV.jpeg" group-title="|AF| NIGERIA",BRIDETV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311407.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NUSMILES TV" tvg-logo="http://103.176.90.118/picons-dino/logos/NUSMILES-TV.png" group-title="|AF| NIGERIA",NUSMILES TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311408.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SPYDER TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SPYDER-TV.jpeg" group-title="|AF| NIGERIA",SPYDER TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311409.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TEMPO" tvg-logo="http://103.176.90.118/picons-dino/logos/tempo.jpg" group-title="|AF| NIGERIA",TEMPO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311410.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVC ENTERTAINMENT" tvg-logo="http://103.176.90.118/picons-dino/logos/TVC-ENTERTAINMENT.png" group-title="|AF| NIGERIA",TVC ENTERTAINMENT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311411.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICAN ENTERTAIMENT TV" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICAN-ENTERTAIMENT-TV.png" group-title="|AF| NIGERIA",AFRICAN ENTERTAIMENT TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311412.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ONCE SPOKEN NETWORK" tvg-logo="http://103.176.90.118/picons-dino/logos/ONCE-SPOKEN-NETWORK.png" group-title="|AF| NIGERIA",ONCE SPOKEN NETWORK
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311413.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NEW BEGINNING TV" tvg-logo="http://103.176.90.118/picons-dino/logos/NEW-BEGINNING-TV.png" group-title="|AF| NIGERIA",NEW BEGINNING TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311414.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KINGSWORLDINFO" tvg-logo="http://103.176.90.118/picons-dino/logos/KINGSWORLDINFO-.jpg" group-title="|AF| NIGERIA",KINGSWORLDINFO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311415.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="METRO TV" tvg-logo="http://103.176.90.118/picons-dino/logos/metrotv.png" group-title="|AF| NIGERIA",METRO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311416.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LIGHT TV" tvg-logo="http://103.176.90.118/picons-dino/logos/lighttv.jpg" group-title="|AF| NIGERIA",LIGHT TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311417.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HOPE CHANNEL" tvg-logo="http://103.176.90.118/picons-dino/logos/hopechannel.png" group-title="|AF| NIGERIA",HOPE CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311418.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FUFU KITCHEN" tvg-logo="http://103.176.90.118/picons-dino/logos/FUFU-KITCHEN.jpeg" group-title="|AF| NIGERIA",FUFU KITCHEN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311419.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ET" tvg-logo="http://103.176.90.118/picons-dino/logos/ET-TV.jpg" group-title="|AF| NIGERIA",ET
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311420.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EBONYLIFE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/EBONYLIFE-TV.jpg" group-title="|AF| NIGERIA",EBONYLIFE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311422.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELE SAHEL" tvg-logo="http://103.176.90.118/picons-dino/logos/TELE-SAHEL.png" group-title="|AF| NIGERIA",TELE SAHEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/640834.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AIT" tvg-logo="http://103.176.90.118/picons-dino/logos/AIT-TV.jpeg" group-title="|AF| NIGERIA",AIT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311423.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMCI TV" tvg-logo="http://103.176.90.118/picons-dino/logos/EMCI-TV-HD.jpg" group-title="|AF| NIGERIA",EMCI TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311421.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AREWA 24" tvg-logo="http://103.176.90.118/picons/logos/arewa24.jpg" group-title="|AF| NIGERIA",AREWA 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/849809.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ROK TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ROK-TV.jpeg" group-title="|AF| NIGERIA",ROK TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/863704.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ITV NETWORKS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/itvn.png" group-title="|AF| DSTV AFRIQUE",ITV NETWORKS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311617.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IGNITION UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/IGNITION--.png" group-title="|AF| DSTV AFRIQUE",IGNITION UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311618.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HGTV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/HGTV-HD.png" group-title="|AF| DSTV AFRIQUE",HGTV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311619.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BET HD" tvg-logo="" group-title="|AF| DSTV AFRIQUE",BET HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/807383.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GAUTV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/GAU-TV.jpg" group-title="|AF| DSTV AFRIQUE",GAUTV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311620.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FASHION ONE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/fashionone.png" group-title="|AF| DSTV AFRIQUE",FASHION ONE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311621.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="E.TV EXTRA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/etv.png" group-title="|AF| DSTV AFRIQUE",E.TV EXTRA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311622.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FAITH UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/faith.png" group-title="|AF| DSTV AFRIQUE",FAITH UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311623.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LESOTHO TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/LESOTHO-TV.jpeg" group-title="|AF| DSTV AFRIQUE",LESOTHO TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311624.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GINX ESPORTS TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/GINX--ESPORTS.png" group-title="|AF| DSTV AFRIQUE",GINX ESPORTS TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311625.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ETOONZ UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/ETOONZ-TV.jpg" group-title="|AF| DSTV AFRIQUE",ETOONZ UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311626.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMOVIES EXTRA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/EMOVIES--.jpeg" group-title="|AF| DSTV AFRIQUE",EMOVIES EXTRA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311627.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMOVIES UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/EMOVIES--.jpeg" group-title="|AF| DSTV AFRIQUE",EMOVIES UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311628.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMMANUEL TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/emmanuel.png" group-title="|AF| DSTV AFRIQUE",EMMANUEL TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311629.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="E.TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/etv.png" group-title="|AF| DSTV AFRIQUE",E.TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311630.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DUMISA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/DUMISA-.jpeg" group-title="|AF| DSTV AFRIQUE",DUMISA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311631.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DEUTSCHE WELLE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/DW-TV.png" group-title="|AF| DSTV AFRIQUE",DEUTSCHE WELLE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311632.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CGTN NEWS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cgtnnews.png" group-title="|AF| DSTV AFRIQUE",CGTN NEWS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311633.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CBS REALITY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cbsreality.png" group-title="|AF| DSTV AFRIQUE",CBS REALITY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311634.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DAYSTAR UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/daystarhd.png" group-title="|AF| DSTV AFRIQUE",DAYSTAR UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311636.m3u8
+#EXTINF:-1 tvg-id="CrimeInvestigationEn.sa" tvg-name="CRIME + INVESTIGATION UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cicrimeplusinvhd.png" group-title="|AF| DSTV AFRIQUE",CRIME + INVESTIGATION UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311637.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="COMEDY CENTRAL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/comedycentralhd.png" group-title="|AF| DSTV AFRIQUE",COMEDY CENTRAL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311638.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CNBC AFRICA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/CNBC-AFRICA.jpg" group-title="|AF| DSTV AFRIQUE",CNBC AFRICA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311639.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA MAGIC FAMILY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/africamagicfamily.png" group-title="|AF| DSTV AFRIQUE",AFRICA MAGIC FAMILY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311640.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BLOOMBERG UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/BLOOMBERG-HD.png" group-title="|AF| DSTV AFRIQUE",BLOOMBERG UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311641.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BAY TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/BAY-TV.jpeg" group-title="|AF| DSTV AFRIQUE",BAY TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311642.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA MAGIC EPIC UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-EPIC.png" group-title="|AF| DSTV AFRIQUE",AFRICA MAGIC EPIC UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311643.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="1 KZN UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/1-KZN.jpeg" group-title="|AF| DSTV AFRIQUE",1 KZN UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311644.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KBC" tvg-logo="http://103.176.90.118/picons/logos/logos/KBC.png" group-title="|AF| DSTV AFRIQUE",KBC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1115796.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NEWZROOM AFRIKA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/NEWZROOM-AFRIKA.png" group-title="|AF| DSTV AFRIQUE",NEWZROOM AFRIKA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311645.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NICKELODEON UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/nickelodeonhd.png" group-title="|AF| DSTV AFRIQUE",NICKELODEON UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311646.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PARLIAMENTARY SERVICE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/PARLIAMENTARY-SERVICE.jpg" group-title="|AF| DSTV AFRIQUE",PARLIAMENTARY SERVICE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311647.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RUSSIA TODAY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/russiatoday.png" group-title="|AF| DSTV AFRIQUE",RUSSIA TODAY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311648.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PBS KIDS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/PBS-KIDS.jpg" group-title="|AF| DSTV AFRIQUE",PBS KIDS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311649.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PEOPLE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/peopletv.png" group-title="|AF| DSTV AFRIQUE",PEOPLE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311650.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RACING 240" tvg-logo="http://103.176.90.118/picons/logos/logos/RACING.png" group-title="|AF| DSTV AFRIQUE",RACING 240
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1125022.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="REAL TIME UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/realtimehd.png" group-title="|AF| DSTV AFRIQUE",REAL TIME UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311651.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTP INTERNACIONAL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/rtpinternacional.png" group-title="|AF| DSTV AFRIQUE",RTP INTERNACIONAL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311652.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 1 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-1.jpg" group-title="|AF| DSTV AFRIQUE",SABC 1 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311653.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 2 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-2.jpeg" group-title="|AF| DSTV AFRIQUE",SABC 2 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311654.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 3 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-3.jpeg" group-title="|AF| DSTV AFRIQUE",SABC 3 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311655.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC NEWS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/sabcnews.png" group-title="|AF| DSTV AFRIQUE",SABC NEWS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311656.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SOUNDCITY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SOUNDCITY-.png" group-title="|AF| DSTV AFRIQUE",SOUNDCITY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311657.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SPICE TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SPICE-TV.jpg" group-title="|AF| DSTV AFRIQUE",SPICE TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311658.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STAR LIFE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/starlifeok.png" group-title="|AF| DSTV AFRIQUE",STAR LIFE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311659.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TBN UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TBN.png" group-title="|AF| DSTV AFRIQUE",TBN UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311660.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELEMUNDO" tvg-logo="http://103.176.90.118/picons/logos/TELEMUNDO-.jpeg" group-title="|AF| DSTV AFRIQUE",TELEMUNDO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1153212.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELLYTRACK UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/tellytrack.png" group-title="|AF| DSTV AFRIQUE",TELLYTRACK UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311661.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="THE HOME CHANNEL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/THE-HOME-CHANNEL.png" group-title="|AF| DSTV AFRIQUE",THE HOME CHANNEL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311662.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TNT AFRICA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TNT-AFRICA.jpg" group-title="|AF| DSTV AFRIQUE",TNT AFRICA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311663.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRAVEL CHANNEL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/travelchannelhd.png" group-title="|AF| DSTV AFRIQUE",TRAVEL CHANNEL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311664.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TSHWANE TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TSHWANE-TV.jpg" group-title="|AF| DSTV AFRIQUE",TSHWANE TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311665.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV MALL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-MALL-CY.png" group-title="|AF| DSTV AFRIQUE",TV MALL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311666.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="WWE SUPERSLAM UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/WWE.png" group-title="|AF| DSTV AFRIQUE",WWE SUPERSLAM UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311668.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NDTV247 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/ndtv24x7.png" group-title="|AF| DSTV AFRIQUE",NDTV247 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311669.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV MUSIC 24 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvmusic24.png" group-title="|AF| DSTV AFRIQUE",MTV MUSIC 24 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311670.m3u8
+#EXTINF:-1 tvg-id="MTVBase.za" tvg-name="MTV BASE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvbasehd.png" group-title="|AF| DSTV AFRIQUE",MTV BASE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311671.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvhd.png" group-title="|AF| DSTV AFRIQUE",MTV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311672.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MINDSET UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/MINDSET-.png" group-title="|AF| DSTV AFRIQUE",MINDSET UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311674.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="YADAH TV" tvg-logo="http://103.176.90.118/picons-dino/logos/YADAH-TV.jpeg" group-title="|AF| DSTV AFRIQUE",YADAH TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311690.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VIA HD" tvg-logo="" group-title="|AF| DSTV AFRIQUE",VIA HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/834318.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AKWAABA MAGIC ABUSUA" tvg-logo="http://103.176.90.118/picons/logos/AKWAABA-MAGIC.jpg" group-title="|AF| DSTV AFRIQUE",AKWAABA MAGIC ABUSUA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/755224.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BIG BROTHER TITANS" tvg-logo="http://103.176.90.118/picons/logos/BIG-BROTHER.jpeg" group-title="|AF| DSTV AFRIQUE",BIG BROTHER TITANS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/838042.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BIG BROTHER NAIJA" tvg-logo="http://103.176.90.118/picons-dino/logos/bigbrother.png" group-title="|AF| DSTV AFRIQUE",BIG BROTHER NAIJA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/599947.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="1 MAGIC" tvg-logo="http://103.176.90.118/picons-dino/logos/1-MAGIC.jpg" group-title="|AF| DSTV AFRIQUE",1 MAGIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311691.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA MAGIC HAUSA" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-HAUSA.png" group-title="|AF| DSTV AFRIQUE",AFRICA MAGIC HAUSA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311700.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMOVIES EXTRA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/EMOVIES--.jpeg" group-title="|AF| DSTV AFRIQUE",EMOVIES EXTRA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311702.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="EMMANUEL TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/emmanuel.png" group-title="|AF| DSTV AFRIQUE",EMMANUEL TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311704.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="E.TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/etv.png" group-title="|AF| DSTV AFRIQUE",E.TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311705.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DUMISA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/DUMISA-.jpeg" group-title="|AF| DSTV AFRIQUE",DUMISA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311706.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CGTN NEWS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cgtnnews.png" group-title="|AF| DSTV AFRIQUE",CGTN NEWS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311707.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CBS REALITY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cbsreality.png" group-title="|AF| DSTV AFRIQUE",CBS REALITY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311708.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DAYSTAR UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/daystartvhd.png" group-title="|AF| DSTV AFRIQUE",DAYSTAR UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311709.m3u8
+#EXTINF:-1 tvg-id="CrimeInvestigationEn.sa" tvg-name="CRIME + INVESTIGATION UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/cicrimeplusinvhd.png" group-title="|AF| DSTV AFRIQUE",CRIME + INVESTIGATION UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311710.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="COMEDY CENTRAL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/comedycentralhd.png" group-title="|AF| DSTV AFRIQUE",COMEDY CENTRAL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311711.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CNBC AFRICA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/CNBC-AFRICA.jpg" group-title="|AF| DSTV AFRIQUE",CNBC AFRICA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311712.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA MAGIC FAMILY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/africamagicfamily.png" group-title="|AF| DSTV AFRIQUE",AFRICA MAGIC FAMILY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311713.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BAY TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/BAY-TV.jpeg" group-title="|AF| DSTV AFRIQUE",BAY TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311715.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BBC LIFESTYLE FHD" tvg-logo="http://103.176.90.118/picons/logos/logos/BBC-LIFESTYLE.png" group-title="|AF| DSTV AFRIQUE",BBC LIFESTYLE FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1124293.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BBC BRIT FHD" tvg-logo="http://103.176.90.118/picons/logos/logos/BBC-BRIT.png" group-title="|AF| DSTV AFRIQUE",BBC BRIT FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1124292.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOONBUG KIDS HD" tvg-logo="http://103.176.90.118/picons/logos/AFRICA/Moonbug-Kids.png" group-title="|AF| DSTV AFRIQUE",MOONBUG KIDS HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/988424.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AL JAZEERA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/aljazeerahd.png" group-title="|AF| DSTV AFRIQUE",AL JAZEERA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311716.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFRICA MAGIC EPIC UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/AFRICA-MAGIC.jpg" group-title="|AF| DSTV AFRIQUE",AFRICA MAGIC EPIC UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311717.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="1 KZN UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/1-KZN.jpeg" group-title="|AF| DSTV AFRIQUE",1 KZN UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311718.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NEWZROOM AFRIKA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/NEWZROOM-AFRIKA.png" group-title="|AF| DSTV AFRIQUE",NEWZROOM AFRIKA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311719.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NICKELODEON UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/nickelodeonhd.png" group-title="|AF| DSTV AFRIQUE",NICKELODEON UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311720.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PARLIAMENTARY SERVICE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/PARLIAMENTARY-SERVICE.jpg" group-title="|AF| DSTV AFRIQUE",PARLIAMENTARY SERVICE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311721.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RUSSIA TODAY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/russiatoday.png" group-title="|AF| DSTV AFRIQUE",RUSSIA TODAY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311722.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PBS KIDS UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/PBS-KIDS.jpg" group-title="|AF| DSTV AFRIQUE",PBS KIDS UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311723.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="REAL TIME UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/realtimehd.png" group-title="|AF| DSTV AFRIQUE",REAL TIME UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311725.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTP INTERNACIONAL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/rtpinternacional.png" group-title="|AF| DSTV AFRIQUE",RTP INTERNACIONAL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311726.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 1 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-1.jpg" group-title="|AF| DSTV AFRIQUE",SABC 1 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311727.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 2 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-2.jpeg" group-title="|AF| DSTV AFRIQUE",SABC 2 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311728.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SABC 3 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SABC-3.jpeg" group-title="|AF| DSTV AFRIQUE",SABC 3 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311729.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SOUNDCITY UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SOUNDCITY-.png" group-title="|AF| DSTV AFRIQUE",SOUNDCITY UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311731.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SPICE TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/SPICE-TV.jpg" group-title="|AF| DSTV AFRIQUE",SPICE TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311732.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STAR LIFE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/starlifeok.png" group-title="|AF| DSTV AFRIQUE",STAR LIFE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311733.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TBN UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TBN.png" group-title="|AF| DSTV AFRIQUE",TBN UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311734.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TELLYTRACK UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/tellytrack.png" group-title="|AF| DSTV AFRIQUE",TELLYTRACK UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311735.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="THE HOME CHANNEL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/THE-HOME-CHANNEL.png" group-title="|AF| DSTV AFRIQUE",THE HOME CHANNEL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311736.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TNT AFRICA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TNT-AFRICA.jpg" group-title="|AF| DSTV AFRIQUE",TNT AFRICA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311737.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRAVEL CHANNEL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/travelchannelhd.png" group-title="|AF| DSTV AFRIQUE",TRAVEL CHANNEL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311738.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TSHWANE TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TSHWANE-TV.jpg" group-title="|AF| DSTV AFRIQUE",TSHWANE TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311739.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV MALL UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/TV-MALL-CY.png" group-title="|AF| DSTV AFRIQUE",TV MALL UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311740.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV5 MONDE AFRIQUE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/tv5mondeafrique.png" group-title="|AF| DSTV AFRIQUE",TV5 MONDE AFRIQUE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311741.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="WWE SUPERSLAM UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/WWE.png" group-title="|AF| DSTV AFRIQUE",WWE SUPERSLAM UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311742.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NDTV247 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/ndtv24x7.png" group-title="|AF| DSTV AFRIQUE",NDTV247 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311743.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV MUSIC 24 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvmusic24.png" group-title="|AF| DSTV AFRIQUE",MTV MUSIC 24 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311744.m3u8
+#EXTINF:-1 tvg-id="MTVBase.za" tvg-name="MTV BASE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvbasehd.png" group-title="|AF| DSTV AFRIQUE",MTV BASE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311745.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MTV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mtvhd.png" group-title="|AF| DSTV AFRIQUE",MTV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311746.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOJALOVE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/MOJALOVE-.png" group-title="|AF| DSTV AFRIQUE",MOJALOVE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311747.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MINDSET UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/MINDSET-.png" group-title="|AF| DSTV AFRIQUE",MINDSET UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311748.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET PLUS 1 UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mnet.png" group-title="|AF| DSTV AFRIQUE",M-NET PLUS 1 UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311749.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CAPE TOWN TV UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/CAPE-TOWN-TV.jpg" group-title="|AF| DSTV AFRIQUE",CAPE TOWN TV UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311750.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RAI ITALIA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/raiitalia.png" group-title="|AF| DSTV AFRIQUE",RAI ITALIA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311751.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OBN TV OROMIA UHD" tvg-logo="" group-title="|AF| DSTV AFRIQUE",OBN TV OROMIA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311752.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ENCA UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/encaafrica.png" group-title="|AF| DSTV AFRIQUE",ENCA UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311753.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NICKELODEON UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/nickelodeonhd.png" group-title="|AF| DSTV AFRIQUE",NICKELODEON UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311755.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="1 MAGIC" tvg-logo="http://103.176.90.118/picons-dino/logos/1-MAGIC.jpg" group-title="|AF| DSTV AFRIQUE",1 MAGIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311768.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ZEE WORLD" tvg-logo="http://103.176.90.118/picons/logos/ZEE-WORLD.jpeg" group-title="|AF| DSTV AFRIQUE",ZEE WORLD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/730122.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CHANNEL O" tvg-logo="http://103.176.90.118/picons-dino/logos/CHANNEL-O.jpg" group-title="|AF| DSTV AFRIQUE",CHANNEL O
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311769.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TRACE MBOA" tvg-logo="http://103.176.90.118/picons/logos/TRACE-MBOA.jpg" group-title="|AF| DSTV AFRIQUE",TRACE MBOA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/768377.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PEARL MAGIC PRIME" tvg-logo="http://103.176.90.118/picons/logos/PEARL-MAGIC-PRIME.png" group-title="|AF| DSTV AFRIQUE",PEARL MAGIC PRIME
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/768468.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LIFETIME" tvg-logo="http://103.176.90.118/picons/logos/laz.lifetime.png" group-title="|AF| DSTV AFRIQUE",LIFETIME
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/767498.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ABOL TV" tvg-logo="" group-title="|AF| DSTV AFRIQUE",ABOL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/863402.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT GRANDSTAND FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport1.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT GRANDSTAND FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311677.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT PREMIER LEAGUE FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport3.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT PREMIER LEAGUE FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311679.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT LALIGA FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport4.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT LALIGA FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311680.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT FOOTBALL FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport5.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT FOOTBALL FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311681.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT MOTORSPORT FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport7.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT MOTORSPORT FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311683.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT 8 FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT 8 FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311684.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT 10 FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT 10 FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311686.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT VARIETY 1 FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport6.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT VARIETY 1 FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311682.m3u8
+#EXTINF:-1 tvg-id="SuperSportVariety2.za" tvg-name="SUPERSPORT VARIETY 2 FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport2.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT VARIETY 2 FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311678.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT VARIETY 3 FHD" tvg-logo="http://103.176.90.118/picons/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT VARIETY 3 FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/861836.m3u8
+#EXTINF:-1 tvg-id="SuperSportRugby.za" tvg-name="SUPERSPORT RUGBY FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT RUGBY FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311687.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT PSL HD" tvg-logo="http://103.176.90.118/picons-dino/logos/SUPERSPORT-PSL.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT PSL HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/780056.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPERSPORT CRICKET FHD" tvg-logo="http://103.176.90.118/picons-dino/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",SUPERSPORT CRICKET FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311688.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPER SPORT SCHOOLS HD" tvg-logo="http://103.176.90.118/picons/logos/logos/SUPER-SPORT-SCHOOLS.png" group-title="|AF| DSTV AFRIQUE",SUPER SPORT SCHOOLS HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1091778.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUPER SPORT BLITZ HD" tvg-logo="http://103.176.90.118/picons/logos/logos/SUPER-SPORT-BLITZ.png" group-title="|AF| DSTV AFRIQUE",SUPER SPORT BLITZ HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1091777.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ETHIOPIA SUPERSPORT LIYU" tvg-logo="http://103.176.90.118/picons/logos/supersport.png" group-title="|AF| DSTV AFRIQUE",ETHIOPIA SUPERSPORT LIYU
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/862942.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A+ HD AF" tvg-logo="http://103.176.90.118/picons/logos/logos/A-PLUS.png" group-title="|AF| DSTV AFRIQUE",A+ HD AF
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1147791.m3u8
+#EXTINF:-1 tvg-id="MNet.za" tvg-name="M NET UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/mnet.png" group-title="|AF| DSTV AFRIQUE",M NET UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311676.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET EAST" tvg-logo="http://103.176.90.118/picons-dino/logos/mnet.png" group-title="|AF| DSTV AFRIQUE",M-NET EAST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311689.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M NET MOVIES SMILE UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-SMILE.png" group-title="|AF| DSTV AFRIQUE",M NET MOVIES SMILE UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311675.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES TOM CRUISE" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-ACTION.png" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES TOM CRUISE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311692.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES ZONE" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-ZONE.jpeg" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES ZONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311693.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES ALL STARS" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-ALL-STARS.jpeg" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES ALL STARS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311695.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES ACTION+ AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-ACTION+.png" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES ACTION+ AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311696.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES ACTION AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/M-NET-MOVIES-ACTION.png" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES ACTION AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311697.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET MOVIES PREMIERE AFRICA" tvg-logo="http://103.176.90.118/picons-dino/logos/mnetmoviespremiere.png" group-title="|AF| DSTV AFRIQUE",M-NET MOVIES PREMIERE AFRICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311698.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="M-NET CITY" tvg-logo="http://103.176.90.118/picons-dino/logos/mnetcity.png" group-title="|AF| DSTV AFRIQUE",M-NET CITY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311699.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MZANSI BIOSKOP" tvg-logo="" group-title="|AF| DSTV AFRIQUE",MZANSI BIOSKOP
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/807976.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MZANSI MAGIC UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/MZANSI-MAGIC.jpeg" group-title="|AF| DSTV AFRIQUE",MZANSI MAGIC UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311756.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC SHOWCASE" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-SHOWCASE.png" group-title="|AF| DSTV AFRIQUE",MAGIC SHOWCASE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311757.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC EPIC" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-EPIC.png" group-title="|AF| DSTV AFRIQUE",MAGIC EPIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311758.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC URBAN" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-URBAN.png" group-title="|AF| DSTV AFRIQUE",MAGIC URBAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311759.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC FAMILY" tvg-logo="http://103.176.90.118/picons-dino/logos/africamagicfamily.png" group-title="|AF| DSTV AFRIQUE",MAGIC FAMILY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311760.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="REAL TIME" tvg-logo="http://103.176.90.118/picons-dino/logos/realtimehd.png" group-title="|AF| DSTV AFRIQUE",REAL TIME
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311761.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC HAUSA" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-HAUSA.png" group-title="|AF| DSTV AFRIQUE",MAGIC HAUSA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311762.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAISHA MAGIC EAST" tvg-logo="http://103.176.90.118/picons/logos/logos/MAISHA-MAGIC-EAST.png" group-title="|AF| DSTV AFRIQUE",MAISHA MAGIC EAST
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1115471.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC YORUBA" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-YORUBA.jpeg" group-title="|AF| DSTV AFRIQUE",MAGIC YORUBA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311763.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC IGBO" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-IGBO.jpg" group-title="|AF| DSTV AFRIQUE",MAGIC IGBO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311764.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAGIC BONGO" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-BONGO.jpg" group-title="|AF| DSTV AFRIQUE",MAGIC BONGO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311765.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MAISHA MAGIC PLUS" tvg-logo="http://103.176.90.118/picons-dino/logos/MAGIC-PLUS.jpeg" group-title="|AF| DSTV AFRIQUE",MAISHA MAGIC PLUS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311766.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="JIMJAM UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/jimjam.png" group-title="|AF| DSTV AFRIQUE",JIMJAM UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311616.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KTO" tvg-logo="http://103.176.90.118/picons/logos/logos/KTO.png" group-title="|AF| DSTV AFRIQUE",KTO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1153176.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LMTV" tvg-logo="http://103.176.90.118/picons/logos/logos/LMTV.png" group-title="|AF| DSTV AFRIQUE",LMTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1153173.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KYKNET KWARANTYN" tvg-logo="http://103.176.90.118/picons/logos/KYKNET-KWARANTYN.jpeg" group-title="|AF| DSTV AFRIQUE",KYKNET KWARANTYN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/745367.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KYKNET LEKKER!" tvg-logo="http://103.176.90.118/picons/logos/KYKNET-LEKKER!.jpeg" group-title="|AF| DSTV AFRIQUE",KYKNET LEKKER!
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/745366.m3u8
+#EXTINF:-1 tvg-id="kykNETKie.za" tvg-name="KYKNET & KIE" tvg-logo="http://103.176.90.118/picons/logos/KYKNET-.jpeg" group-title="|AF| DSTV AFRIQUE",KYKNET & KIE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/745365.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KYKNET NOU!" tvg-logo="http://103.176.90.118/picons/logos/KYKNET-NOU!.png" group-title="|AF| DSTV AFRIQUE",KYKNET NOU!
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/745364.m3u8
+#EXTINF:-1 tvg-id="kykNET.za" tvg-name="KYKNET UHD" tvg-logo="http://103.176.90.118/picons-dino/logos/KYKNET-TV.png" group-title="|AF| DSTV AFRIQUE",KYKNET UHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311615.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DOORASHADA MADAXWEYNAHAY" tvg-logo="http://103.176.90.118/picons/logos/MADAXWEYNAHAY.jpg" group-title="|AF| SOMALIA",DOORASHADA MADAXWEYNAHAY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/724039.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SAUDI CH QURAN HD" tvg-logo="http://103.176.90.118/picons/logos/saudiquran.jpeg" group-title="|AF| SOMALIA",SAUDI CH QURAN HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679611.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IQRAA" tvg-logo="http://103.176.90.118/picons/logos/iqraa.png" group-title="|AF| SOMALIA",IQRAA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679613.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTD DJIBOUTI" tvg-logo="http://103.176.90.118/picons/logos/djibouti.png" group-title="|AF| SOMALIA",RTD DJIBOUTI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679624.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SNTV 1" tvg-logo="http://103.176.90.118/picons/logos/slntv.png" group-title="|AF| SOMALIA",SNTV 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679617.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SNTV 2" tvg-logo="http://103.176.90.118/picons/logos/slntv.png" group-title="|AF| SOMALIA",SNTV 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679618.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SLNTV" tvg-logo="http://103.176.90.118/picons/logos/slntv.png" group-title="|AF| SOMALIA",SLNTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679619.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="UNIVERSAL 4K" tvg-logo="http://103.176.90.118/picons/logos/universalsomalitv.png" group-title="|AF| SOMALIA",UNIVERSAL 4K
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679620.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="UNIVERSAL FHD" tvg-logo="http://103.176.90.118/picons/logos/universalsomalitv.png" group-title="|AF| SOMALIA",UNIVERSAL FHD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679621.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BANAADIR TV" tvg-logo="http://103.176.90.118/picons/logos/BANAADIR-TV.png" group-title="|AF| SOMALIA",BANAADIR TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679625.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORN CABLE TV HD" tvg-logo="http://103.176.90.118/picons/logos/horncabletv.png" group-title="|AF| SOMALIA",HORN CABLE TV HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679626.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KALSAN TV" tvg-logo="http://103.176.90.118/picons/logos/kalsantv.png" group-title="|AF| SOMALIA",KALSAN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679627.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KALSAN HD" tvg-logo="http://103.176.90.118/picons/logos/kalsantv.png" group-title="|AF| SOMALIA",KALSAN HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679628.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PUNTLAND TV" tvg-logo="http://103.176.90.118/picons/logos/puntlandtv.jpg" group-title="|AF| SOMALIA",PUNTLAND TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679629.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SHABELLE TV HD" tvg-logo="http://103.176.90.118/picons/logos/SHABELLE-TV.png" group-title="|AF| SOMALIA",SHABELLE TV HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679630.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="JUBBALAND TV" tvg-logo="http://103.176.90.118/picons/logos/JUBBALAND.png" group-title="|AF| SOMALIA",JUBBALAND TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679631.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOBAMINO TV" tvg-logo="http://103.176.90.118/picons/logos/GOBAMINO.png" group-title="|AF| SOMALIA",GOBAMINO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679632.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OMN" tvg-logo="http://103.176.90.118/picons/logos/omn.png" group-title="|AF| SOMALIA",OMN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679633.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ATV" tvg-logo="http://103.176.90.118/picons/logos/ATV.png" group-title="|AF| SOMALIA",ATV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679634.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ESTV" tvg-logo="http://103.176.90.118/picons/logos/estv.jpg" group-title="|AF| SOMALIA",ESTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679635.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TIGRAI TV" tvg-logo="http://103.176.90.118/picons/logos/TIGRAI.jpg" group-title="|AF| SOMALIA",TIGRAI TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679636.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CBA" tvg-logo="http://103.176.90.118/picons/logos/cba.png" group-title="|AF| SOMALIA",CBA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679638.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BULSHO TV" tvg-logo="http://103.176.90.118/picons/logos/bulsho.png" group-title="|AF| SOMALIA",BULSHO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679641.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ES TV" tvg-logo="http://103.176.90.118/picons/logos/estv.jpg" group-title="|AF| SOMALIA",ES TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679644.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="KGS SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/KGS-TV.jpeg" group-title="|AF| SOMALIA",KGS SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679646.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SBC TV" tvg-logo="http://103.176.90.118/picons/logos/sbc.png" group-title="|AF| SOMALIA",SBC TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679647.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="STV SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/stv.png" group-title="|AF| SOMALIA",STV SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679650.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FIVE SOMALIA TV" tvg-logo="http://103.176.90.118/picons/logos/FIVE-SOMALIA-TV.png" group-title="|AF| SOMALIA",FIVE SOMALIA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679651.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MMTV SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/MMTV-SOMALIA.png" group-title="|AF| SOMALIA",MMTV SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679652.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SAHAN TV" tvg-logo="http://103.176.90.118/picons/logos/SAHAN-TV.png" group-title="|AF| SOMALIA",SAHAN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679654.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOOB JOOG" tvg-logo="http://103.176.90.118/picons/logos/GOOB-JOOG.jpeg" group-title="|AF| SOMALIA",GOOB JOOG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679655.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BULLSHO TV" tvg-logo="http://103.176.90.118/picons/logos/BULLSHO.png" group-title="|AF| SOMALIA",BULLSHO TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679637.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HCTV" tvg-logo="http://103.176.90.118/picons/logos/hctv.png" group-title="|AF| SOMALIA",HCTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679657.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PUTLAND TV" tvg-logo="http://103.176.90.118/picons/logos/PUTLAND-TV.png" group-title="|AF| SOMALIA",PUTLAND TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679658.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MALILAND TV" tvg-logo="http://103.176.90.118/picons/logos/SOMALILAND-TV.jpeg" group-title="|AF| SOMALIA",MALILAND TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679660.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TTV SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/ttv.png" group-title="|AF| SOMALIA",TTV SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679663.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="THM SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/THM--.png" group-title="|AF| SOMALIA",THM SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679664.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DW TV" tvg-logo="http://103.176.90.118/picons/logos/DW-TV.png" group-title="|AF| SOMALIA",DW TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679665.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORYAAL24 TV SOMALIA" tvg-logo="http://103.176.90.118/picons/logos/HORYAAL-24-TV.png" group-title="|AF| SOMALIA",HORYAAL24 TV SOMALIA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679667.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AL JAZEERA" tvg-logo="http://103.176.90.118/picons/logos/aljazeera.png" group-title="|AF| SOMALIA",AL JAZEERA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679668.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MALI HCTV" tvg-logo="http://103.176.90.118/picons/logos/somalihctv.jpg" group-title="|AF| SOMALIA",MALI HCTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679672.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT ACTION HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT ACTION HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679603.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT DRAMA HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT DRAMA HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679604.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT HINDI HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT HINDI HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679605.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT ISLAMIC HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT ISLAMIC HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679606.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT MUSIC HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT MUSIC HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679607.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT KIDS HD" tvg-logo="http://103.176.90.118/picons/logos/hornsat.png" group-title="|AF| SOMALIA",HORNSAT KIDS HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679608.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="HORNSAT SERIES HD" tvg-logo="http://103.176.90.118/picons/logos/HORNSAT-SERIES-TV.jpeg" group-title="|AF| SOMALIA",HORNSAT SERIES HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/679609.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX ACTION" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX ACTION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068545.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX SPORT" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX SPORT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068544.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX ISLAM" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX ISLAM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068543.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX MUSIC" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068542.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX COMEDY" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX COMEDY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068541.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX SERIES" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX SERIES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068540.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AFROFLIX PREMIER" tvg-logo="http://103.176.90.118/picons/logos/logos/AFROFLIX-PREMIER.png" group-title="|AF| SOMALIA",AFROFLIX PREMIER
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1068539.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="IMEDIA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/IMEDIA-TV.jpeg" group-title="|AF| SENEGAL",IMEDIA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311277.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LOBS TV" tvg-logo="http://103.176.90.118/picons-dino/logos/LOBS-TV.jpg" group-title="|AF| SENEGAL",LOBS TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311278.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOURIDE TV" tvg-logo="http://103.176.90.118/picons-dino/logos/MOURIDE-TV.jpeg" group-title="|AF| SENEGAL",MOURIDE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311279.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RDV" tvg-logo="http://103.176.90.118/picons-dino/logos/RDV-TV.jpeg" group-title="|AF| SENEGAL",RDV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311280.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="7TV" tvg-logo="http://103.176.90.118/picons-dino/logos/7TV-.png" group-title="|AF| SENEGAL",7TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311281.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ALAZHARTOUBA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ALAZHARTOUBA-TV.jpg" group-title="|AF| SENEGAL",ALAZHARTOUBA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311282.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TOUBA MONDE BI" tvg-logo="http://103.176.90.118/picons-dino/logos/TOUBA-TV.jpg" group-title="|AF| SENEGAL",TOUBA MONDE BI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311283.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TOUBA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/TOUBA-TV.jpg" group-title="|AF| SENEGAL",TOUBA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311284.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BICHRI TV" tvg-logo="http://103.176.90.118/picons-dino/logos/BICHRI-TV.jpeg" group-title="|AF| SENEGAL",BICHRI TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311285.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="D24" tvg-logo="http://103.176.90.118/picons-dino/logos/D24-.jpg" group-title="|AF| SENEGAL",D24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311286.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ASFIYAH TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ASFIYAH-TV.jpg" group-title="|AF| SENEGAL",ASFIYAH TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311287.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DTV" tvg-logo="http://103.176.90.118/picons-dino/logos/DTV.png" group-title="|AF| SENEGAL",DTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311288.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTS2" tvg-logo="http://103.176.90.118/picons-dino/logos/rts2.png" group-title="|AF| SENEGAL",RTS2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311289.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTS1" tvg-logo="http://103.176.90.118/picons-dino/logos/rts1.png" group-title="|AF| SENEGAL",RTS1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311290.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTF" tvg-logo="http://103.176.90.118/picons/logos/EUROPE/RTF.png" group-title="|AF| SENEGAL",RTF
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/822325.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TFM RELIGIONS" tvg-logo="http://103.176.90.118/picons-dino/logos/TFM-RELIGIONS.jpeg" group-title="|AF| SENEGAL",TFM RELIGIONS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311291.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LUTTE TV" tvg-logo="http://103.176.90.118/picons/logos/logos/LUTTE.png" group-title="|AF| SENEGAL",LUTTE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311292.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOURCHID" tvg-logo="http://103.176.90.118/picons/logos/logos/MOURCHID.png" group-title="|AF| SENEGAL",MOURCHID
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311293.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MUSIC TV" tvg-logo="http://103.176.90.118/picons-dino/logos/MUSIC--TV.jpg" group-title="|AF| SENEGAL",MUSIC TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311294.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ASONGA TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ASONGA-TV.jpg" group-title="|AF| SENEGAL",ASONGA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311295.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TMS" tvg-logo="http://103.176.90.118/picons-dino/logos/TMS-.png" group-title="|AF| SENEGAL",TMS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311296.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="C3 TV" tvg-logo="http://103.176.90.118/picons-dino/logos/C3-TV.jpg" group-title="|AF| SENEGAL",C3 TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311297.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="WALF TV" tvg-logo="http://103.176.90.118/picons-dino/logos/WALF-TV.png" group-title="|AF| SENEGAL",WALF TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311298.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SERIE SN" tvg-logo="http://103.176.90.118/picons-dino/logos/series.jpg" group-title="|AF| SENEGAL",SERIE SN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311299.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SEN TV" tvg-logo="http://103.176.90.118/picons-dino/logos/SEN-TV.png" group-title="|AF| SENEGAL",SEN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311300.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MUSICTV SN" tvg-logo="http://103.176.90.118/picons-dino/logos/MUSICTV-SN.jpg" group-title="|AF| SENEGAL",MUSICTV SN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311301.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A2ITV MUSIC" tvg-logo="http://103.176.90.118/picons-dino/logos/A2ITV-MUSIC.jpeg" group-title="|AF| SENEGAL",A2ITV MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311304.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A2I TV RELIGION" tvg-logo="http://103.176.90.118/picons-dino/logos/A2I-TV-RELIGION.jpg" group-title="|AF| SENEGAL",A2I TV RELIGION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311305.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A2I TV" tvg-logo="http://103.176.90.118/picons-dino/logos/A2I-TV.jpeg" group-title="|AF| SENEGAL",A2I TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311306.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MOURCHID TV" tvg-logo="http://103.176.90.118/picons/logos/logos/MOURCHID.png" group-title="|AF| SENEGAL",MOURCHID TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/721950.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="RTJ SENEGAL" tvg-logo="http://103.176.90.118/picons-dino/logos/RTJ-SENEGAL.jpg" group-title="|AF| SENEGAL",RTJ SENEGAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311307.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="D5TV" tvg-logo="http://103.176.90.118/picons-dino/logos/D5TV-.jpg" group-title="|AF| SENEGAL",D5TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311310.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="SUNU YEUF HD" tvg-logo="http://103.176.90.118/picons/logos/SUNU-YEUF.jpg" group-title="|AF| SENEGAL",SUNU YEUF HD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/834536.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="ASFIYAHI TV" tvg-logo="http://103.176.90.118/picons-dino/logos/ASFIYAH-TV.jpg" group-title="|AF| SENEGAL",ASFIYAHI TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/666249.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MALIKIA TV" tvg-logo="http://103.176.90.118/picons/logos/MALIKIATV.jpeg" group-title="|AF| SENEGAL",MALIKIA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/666243.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LAMP FALL TV" tvg-logo="http://103.176.90.118/picons-dino/logos/LAMP-FALL-TV.jpeg" group-title="|AF| SENEGAL",LAMP FALL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311309.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TFM" tvg-logo="http://103.176.90.118/picons-dino/logos/tfm.png" group-title="|AF| SENEGAL",TFM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311311.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="2S TV" tvg-logo="http://103.176.90.118/picons-dino/logos/2S-TV.png" group-title="|AF| SENEGAL",2S TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/311312.m3u8
+#EXTINF:-1 tvg-id="TF1.fr" tvg-name="TF1" tvg-logo="http://103.176.90.118/picons/logos/france/TF1.png" group-title="|EU| FRANCE",TF1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845452.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TF1+ STAR ACADEMY" tvg-logo="http://103.176.90.118/picons/logos/logos/TF1-STAR-ACADEMY.png" group-title="|EU| FRANCE",TF1+ STAR ACADEMY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/1161549.m3u8
+#EXTINF:-1 tvg-id="France2.fr" tvg-name="FRANCE 2" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCE2FHD.png" group-title="|EU| FRANCE",FRANCE 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845450.m3u8
+#EXTINF:-1 tvg-id="France3.fr" tvg-name="FRANCE 3" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCE3FHD.png" group-title="|EU| FRANCE",FRANCE 3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845449.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="FRANCE 3 NOA" tvg-logo="http://103.176.90.118/picons/logos/france/france3-noa.png" group-title="|EU| FRANCE",FRANCE 3 NOA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845448.m3u8
+#EXTINF:-1 tvg-id="France4.fr" tvg-name="FRANCE 4" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCE4FHD.png" group-title="|EU| FRANCE",FRANCE 4
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845447.m3u8
+#EXTINF:-1 tvg-id="France5.fr" tvg-name="FRANCE 5" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCE5FHD.png" group-title="|EU| FRANCE",FRANCE 5
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845446.m3u8
+#EXTINF:-1 tvg-id="M6.fr" tvg-name="M6" tvg-logo="http://103.176.90.118/picons/logos/france/M6.png" group-title="|EU| FRANCE",M6
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845445.m3u8
+#EXTINF:-1 tvg-id="C8.fr" tvg-name="C8" tvg-logo="http://103.176.90.118/picons/logos/france/C8.jpg" group-title="|EU| FRANCE",C8
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845444.m3u8
+#EXTINF:-1 tvg-id="W9.fr" tvg-name="W9" tvg-logo="http://103.176.90.118/picons/logos/france/W9.png" group-title="|EU| FRANCE",W9
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845443.m3u8
+#EXTINF:-1 tvg-id="6ter.fr" tvg-name="6TER" tvg-logo="http://103.176.90.118/picons/logos/france/6TER.png" group-title="|EU| FRANCE",6TER
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845442.m3u8
+#EXTINF:-1 tvg-id="TF1SeriesFilms.fr" tvg-name="TF1 FILMS & SÉRIES" tvg-logo="http://103.176.90.118/picons/logos/france/TF1_SERIE.png" group-title="|EU| FRANCE",TF1 FILMS & SÉRIES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845441.m3u8
+#EXTINF:-1 tvg-id="TMC.fr" tvg-name="TMC" tvg-logo="http://103.176.90.118/picons/logos/france/TMC-1.png" group-title="|EU| FRANCE",TMC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845440.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TMC +1" tvg-logo="http://103.176.90.118/picons/logos/france/TMC-PLUS-1-HEVC.png" group-title="|EU| FRANCE",TMC +1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845439.m3u8
+#EXTINF:-1 tvg-id="TFX.fr" tvg-name="TFX" tvg-logo="http://103.176.90.118/picons/logos/france/TFX.png" group-title="|EU| FRANCE",TFX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845438.m3u8
+#EXTINF:-1 tvg-id="RTl9.mu" tvg-name="RTL9" tvg-logo="http://103.176.90.118/picons/logos/france/RTL9.png" group-title="|EU| FRANCE",RTL9
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845437.m3u8
+#EXTINF:-1 tvg-id="AB1.fr" tvg-name="AB1" tvg-logo="http://103.176.90.118/picons/logos/france/AB1.png" group-title="|EU| FRANCE",AB1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845436.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AB3" tvg-logo="http://103.176.90.118/picons/logos/france/AB3.png" group-title="|EU| FRANCE",AB3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845435.m3u8
+#EXTINF:-1 tvg-id="TvBreizh.fr" tvg-name="TV BREIZH" tvg-logo="http://103.176.90.118/picons/logos/france/TVBREIZH.png" group-title="|EU| FRANCE",TV BREIZH
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845434.m3u8
+#EXTINF:-1 tvg-id="BET.fr" tvg-name="BET" tvg-logo="http://103.176.90.118/picons/logos/france/BET.png" group-title="|EU| FRANCE",BET
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845433.m3u8
+#EXTINF:-1 tvg-id="ARTE.fr" tvg-name="ARTE" tvg-logo="http://103.176.90.118/picons/logos/france/ARTEHD.png" group-title="|EU| FRANCE",ARTE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845432.m3u8
+#EXTINF:-1 tvg-id="ParisPremiere.fr" tvg-name="PARIS PREMIÈRE" tvg-logo="http://103.176.90.118/picons/logos/france/PARISPREMIERE.png" group-title="|EU| FRANCE",PARIS PREMIÈRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845431.m3u8
+#EXTINF:-1 tvg-id="NovelasTV.fr" tvg-name="NOVELAS" tvg-logo="http://103.176.90.118/picons/logos/france/NOVELASTV.png" group-title="|EU| FRANCE",NOVELAS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845430.m3u8
+#EXTINF:-1 tvg-id="Cherie25.fr" tvg-name="CHÉRIE 25" tvg-logo="http://103.176.90.118/picons/logos/france/CHERIE25.png" group-title="|EU| FRANCE",CHÉRIE 25
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845429.m3u8
+#EXTINF:-1 tvg-id="13emeRue.mu" tvg-name="13ÈME RUE" tvg-logo="http://103.176.90.118/picons/logos/france/13-EME-RUE.png" group-title="|EU| FRANCE",13ÈME RUE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845428.m3u8
+#EXTINF:-1 tvg-id="Teva.fr" tvg-name="TÉVA" tvg-logo="http://103.176.90.118/picons/logos/france/TEVAHD.png" group-title="|EU| FRANCE",TÉVA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845427.m3u8
+#EXTINF:-1 tvg-id="NRJ12.fr" tvg-name="NRJ 12" tvg-logo="http://103.176.90.118/picons/logos/france/NRJ12_2005.png" group-title="|EU| FRANCE",NRJ 12
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845426.m3u8
+#EXTINF:-1 tvg-id="Weo.fr" tvg-name="WÉO" tvg-logo="http://103.176.90.118/picons/logos/france/WEO.png" group-title="|EU| FRANCE",WÉO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845425.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BIP TV" tvg-logo="http://103.176.90.118/picons/logos/france/Bip-TV.png" group-title="|EU| FRANCE",BIP TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845424.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TÉBÉSUD" tvg-logo="http://103.176.90.118/picons/logos/france/TEBESUD-OK.png" group-title="|EU| FRANCE",TÉBÉSUD
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845423.m3u8
+#EXTINF:-1 tvg-id="IDF1.fr" tvg-name="IDF" tvg-logo="http://103.176.90.118/picons/logos/france/IDF-1.png" group-title="|EU| FRANCE",IDF
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845422.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="VIA GRAND PARIS" tvg-logo="http://103.176.90.118/picons/logos/france/VIAGRANDPARIS.png" group-title="|EU| FRANCE",VIA GRAND PARIS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845421.m3u8
+#EXTINF:-1 tvg-id="Canal32.fr" tvg-name="CANAL 32" tvg-logo="http://103.176.90.118/picons/logos/france/Canal_32.png" group-title="|EU| FRANCE",CANAL 32
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845420.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVR" tvg-logo="http://103.176.90.118/picons/logos/france/TVR.png" group-title="|EU| FRANCE",TVR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845419.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TVPI" tvg-logo="http://103.176.90.118/picons/logos/france/Tvpi.png" group-title="|EU| FRANCE",TVPI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845418.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TLC" tvg-logo="http://103.176.90.118/picons/logos/TLC-HD.png" group-title="|EU| FRANCE",TLC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845417.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LA CHAÎNE PARLEMENTAIRE" tvg-logo="http://103.176.90.118/picons/logos/france/LCP.png" group-title="|EU| FRANCE",LA CHAÎNE PARLEMENTAIRE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845416.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TV8 MONT BLANC" tvg-logo="http://103.176.90.118/picons/logos/france/Tv8_Mont-Blanc.png" group-title="|EU| FRANCE",TV8 MONT BLANC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845415.m3u8
+#EXTINF:-1 tvg-id="Eurochannel.fr" tvg-name="EUROCHANNEL" tvg-logo="http://103.176.90.118/picons/logos/france/euro-channel.png" group-title="|EU| FRANCE",EUROCHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845414.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="TÉLÉ ANGERS" tvg-logo="http://103.176.90.118/picons/logos/france/Angers-T%c3%a9l%c3%a9.png" group-title="|EU| FRANCE",TÉLÉ ANGERS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845413.m3u8
+#EXTINF:-1 tvg-id="LaChaineMeteo.fr" tvg-name="LA CHAINE MÉTÉO" tvg-logo="http://103.176.90.118/picons/logos/france/LACHAINEMETEO.png" group-title="|EU| FRANCE",LA CHAINE MÉTÉO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845411.m3u8
+#EXTINF:-1 tvg-id="France24.fr" tvg-name="FRANCE 24" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCE24.png" group-title="|EU| FRANCE",FRANCE 24
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845410.m3u8
+#EXTINF:-1 tvg-id="FranceInfo.fr" tvg-name="FRANCE INFO" tvg-logo="http://103.176.90.118/picons/logos/france/FRANCEINFO.png" group-title="|EU| FRANCE",FRANCE INFO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845409.m3u8
+#EXTINF:-1 tvg-id="CNews.fr" tvg-name="CNEWS" tvg-logo="http://103.176.90.118/picons/logos/france/CNEWSTV.png" group-title="|EU| FRANCE",CNEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845408.m3u8
+#EXTINF:-1 tvg-id="I24News.fr" tvg-name="I24 NEWS" tvg-logo="http://103.176.90.118/picons/logos/france/I24NEWSFHD.png" group-title="|EU| FRANCE",I24 NEWS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845407.m3u8
+#EXTINF:-1 tvg-id="LCI.fr" tvg-name="LCI" tvg-logo="http://103.176.90.118/picons/logos/france/LCI.png" group-title="|EU| FRANCE",LCI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845406.m3u8
+#EXTINF:-1 tvg-id="TV5Monde.fr" tvg-name="TV5 MONDE FBS" tvg-logo="http://103.176.90.118/picons/logos/france/TV5MONDE.png" group-title="|EU| FRANCE",TV5 MONDE FBS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845405.m3u8
+#EXTINF:-1 tvg-id="BFMTV.fr" tvg-name="BFM TV" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845404.m3u8
+#EXTINF:-1 tvg-id="BFMParis.fr" tvg-name="BFM TV PARIS" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV PARIS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845403.m3u8
+#EXTINF:-1 tvg-id="BFMLyon.fr" tvg-name="BFM TV LYON" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV LYON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845402.m3u8
+#EXTINF:-1 tvg-id="BFMGrandLille.fr" tvg-name="BFM TV GRAND LITTORAL" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV GRAND LITTORAL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845401.m3u8
+#EXTINF:-1 tvg-id="BFMCotedAzur.fr" tvg-name="BFM TV MARSEILLE CÔTE D'AZUR" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV MARSEILLE CÔTE D'AZUR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845400.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="BFM TV ALSACE" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM TV ALSACE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845399.m3u8
+#EXTINF:-1 tvg-id="BFMBusiness.fr" tvg-name="BFM BUSINESS" tvg-logo="http://103.176.90.118/picons/logos/france/BFMTV.png" group-title="|EU| FRANCE",BFM BUSINESS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845398.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="A LA UNE" tvg-logo="http://103.176.90.118/picons/logos/france/La_Une.png" group-title="|EU| FRANCE",A LA UNE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845397.m3u8
+#EXTINF:-1 tvg-id="CanalPlusSport.fr" tvg-name="CANAL+ SPORT" tvg-logo="http://103.176.90.118/picons/logos/france/CANALSPORT-1.png" group-title="|EU| FRANCE",CANAL+ SPORT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845395.m3u8
+#EXTINF:-1 tvg-id="CanalPlusSport360.fr" tvg-name="CANAL+ SPORT 360" tvg-logo="http://103.176.90.118/picons/logos/logos/CANAL-SPORT-360.png" group-title="|EU| FRANCE",CANAL+ SPORT 360
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845394.m3u8
+#EXTINF:-1 tvg-id="CanalPlusFoot.fr" tvg-name="CANAL+ FOOT" tvg-logo="http://103.176.90.118/piconsnew/canalplusfoot.png" group-title="|EU| FRANCE",CANAL+ FOOT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845393.m3u8
+#EXTINF:-1 tvg-id="CanalPlusPremierLeague.fr" tvg-name="CANAL+ PL" tvg-logo="http://103.176.90.118/piconsnew/canalplus.png" group-title="|EU| FRANCE",CANAL+ PL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845392.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CANAL+ TOP 14" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-PLUS-TOP-14.png" group-title="|EU| FRANCE",CANAL+ TOP 14
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845391.m3u8
+#EXTINF:-1 tvg-id="BeinSports1.fr" tvg-name="beIN SPORTS 1" tvg-logo="http://103.176.90.118/picons/logos/france/BEINSPORT1.png" group-title="|EU| FRANCE",beIN SPORTS 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845390.m3u8
+#EXTINF:-1 tvg-id="BeinSports2.fr" tvg-name="beIN SPORTS 2" tvg-logo="http://103.176.90.118/picons/logos/france/BEINSPORT2.png" group-title="|EU| FRANCE",beIN SPORTS 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845389.m3u8
+#EXTINF:-1 tvg-id="BeinSports3.fr" tvg-name="beIN SPORTS 3" tvg-logo="http://103.176.90.118/picons/logos/france/bein-sportshd3.png" group-title="|EU| FRANCE",beIN SPORTS 3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845388.m3u8
+#EXTINF:-1 tvg-id="RMCSport1.fr" tvg-name="RMC SPORT 1" tvg-logo="http://103.176.90.118/picons/logos/france/RMC-Sport-1.png" group-title="|EU| FRANCE",RMC SPORT 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845387.m3u8
+#EXTINF:-1 tvg-id="RMCSport2.fr" tvg-name="RMC SPORT 2" tvg-logo="http://103.176.90.118/picons/logos/france/RMC-Sport-2.png" group-title="|EU| FRANCE",RMC SPORT 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845386.m3u8
+#EXTINF:-1 tvg-id="InfosportPlus.fr" tvg-name="INFOSPORT+" tvg-logo="http://103.176.90.118/piconsnew/infosportplus.png" group-title="|EU| FRANCE",INFOSPORT+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845385.m3u8
+#EXTINF:-1 tvg-id="LEquipe21.fr" tvg-name="L'ÉQUIPE 21" tvg-logo="http://103.176.90.118/picons/logos/france/LEQUIPE21HD.png" group-title="|EU| FRANCE",L'ÉQUIPE 21
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845384.m3u8
+#EXTINF:-1 tvg-id="GolfPlus.fr" tvg-name="GOLF+" tvg-logo="http://103.176.90.118/piconsnew/golfplus.png" group-title="|EU| FRANCE",GOLF+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845383.m3u8
+#EXTINF:-1 tvg-id="GolfChannel.fr" tvg-name="GOLF CHANNEL" tvg-logo="http://103.176.90.118/picons/logos/france/Golf_Channel_Logo.png" group-title="|EU| FRANCE",GOLF CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845382.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OL PLAY" tvg-logo="http://103.176.90.118/picons/logos/france/OLPlay.png" group-title="|EU| FRANCE",OL PLAY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845381.m3u8
+#EXTINF:-1 tvg-id="EquidiaLive.mu" tvg-name="ÉQUIDIA LIVE" tvg-logo="http://103.176.90.118/picons/logos/france/EQUIDIALIVEFHD.png" group-title="|EU| FRANCE",ÉQUIDIA LIVE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845380.m3u8
+#EXTINF:-1 tvg-id="LuckyJack.lu" tvg-name="LUCKY JACK" tvg-logo="http://103.176.90.118/picons/logos/france/Lucky-Jack.png" group-title="|EU| FRANCE",LUCKY JACK
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845379.m3u8
+#EXTINF:-1 tvg-id="Automoto.fr" tvg-name="AUTOMOTO LA CHAÎNE" tvg-logo="http://103.176.90.118/picons/logos/france/AUTOMOTO.png" group-title="|EU| FRANCE",AUTOMOTO LA CHAÎNE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845378.m3u8
+#EXTINF:-1 tvg-id="TraceSportStars.fr" tvg-name="TRACE SPORT STARS" tvg-logo="http://103.176.90.118/picons/logos/france/trace-sport-stars-1.png" group-title="|EU| FRANCE",TRACE SPORT STARS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845377.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NAUTICAL CHANNEL" tvg-logo="http://103.176.90.118/picons/logos/france/Nautical.png" group-title="|EU| FRANCE",NAUTICAL CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845376.m3u8
+#EXTINF:-1 tvg-id="SportEnFrance.fr" tvg-name="SPORTS EN FRANCE" tvg-logo="http://103.176.90.118/picons/logos/france/Sport_en_France_Logo.png" group-title="|EU| FRANCE",SPORTS EN FRANCE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845375.m3u8
+#EXTINF:-1 tvg-id="Eurosport1.fr" tvg-name="EUROSPORT" tvg-logo="http://103.176.90.118/picons/logos/france/EUROSPORT1HD.png" group-title="|EU| FRANCE",EUROSPORT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845374.m3u8
+#EXTINF:-1 tvg-id="Eurosport2.fr" tvg-name="EUROSPORT 2" tvg-logo="http://103.176.90.118/picons/logos/france/EUROSPORT2HD.png" group-title="|EU| FRANCE",EUROSPORT 2
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845373.m3u8
+#EXTINF:-1 tvg-id="CanalPlusFormula1.fr" tvg-name="CANAL+ FORMULE 1" tvg-logo="http://103.176.90.118/picons/logos/france/canalplusformula1.png" group-title="|EU| FRANCE",CANAL+ FORMULE 1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845372.m3u8
+#EXTINF:-1 tvg-id="Motogp.fr" tvg-name="CANAL+ MOTO GP" tvg-logo="http://103.176.90.118/picons/logos/france/Canal_MotoGP.png" group-title="|EU| FRANCE",CANAL+ MOTO GP
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845371.m3u8
+#EXTINF:-1 tvg-id="CanalPlus.fr" tvg-name="CANAL+" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-FHD.png" group-title="|EU| FRANCE",CANAL+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845369.m3u8
+#EXTINF:-1 tvg-id="CanalPlusCinema.fr" tvg-name="CANAL+ CINEMA" tvg-logo="http://103.176.90.118/picons/logos/logos/CANAL-CINEMA-HEVC.png" group-title="|EU| FRANCE",CANAL+ CINEMA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845368.m3u8
+#EXTINF:-1 tvg-id="CanalPlusGrandEcran.fr" tvg-name="CANAL+ GRAND ÉCRAN" tvg-logo="http://103.176.90.118/picons/logos/logos/CANAL-GRAND-ECRAN.png" group-title="|EU| FRANCE",CANAL+ GRAND ÉCRAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845367.m3u8
+#EXTINF:-1 tvg-id="CanalplusSeries.fr" tvg-name="CANAL+ SÉRIES" tvg-logo="http://103.176.90.118/picons/logos/france/canal_series.png" group-title="|EU| FRANCE",CANAL+ SÉRIES
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845366.m3u8
+#EXTINF:-1 tvg-id="CinePlusPremier.fr" tvg-name="CINÉ+ PREMIER" tvg-logo="http://103.176.90.118/picons/logos/france/CINEPREMIER.png" group-title="|EU| FRANCE",CINÉ+ PREMIER
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845365.m3u8
+#EXTINF:-1 tvg-id="CinePlusEmotion.fr" tvg-name="CINÉ+ ÉMOTION" tvg-logo="http://103.176.90.118/picons/logos/france/CINEEMOTION.png" group-title="|EU| FRANCE",CINÉ+ ÉMOTION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845364.m3u8
+#EXTINF:-1 tvg-id="CinePlusFamiz.fr" tvg-name="CINÉ+ FAMIZ" tvg-logo="http://103.176.90.118/picons/logos/france/CINEFAMIZ.png" group-title="|EU| FRANCE",CINÉ+ FAMIZ
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845363.m3u8
+#EXTINF:-1 tvg-id="CinePlusFrisson.fr" tvg-name="CINÉ+ FRISSON" tvg-logo="http://103.176.90.118/picons/logos/france/CINEFRISSON.png" group-title="|EU| FRANCE",CINÉ+ FRISSON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845362.m3u8
+#EXTINF:-1 tvg-id="CinePlusClub.fr" tvg-name="CINÉ+ CLUB" tvg-logo="http://103.176.90.118/picons/logos/france/CINECLUB.png" group-title="|EU| FRANCE",CINÉ+ CLUB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845361.m3u8
+#EXTINF:-1 tvg-id="CinePlusClassic.fr" tvg-name="CINÉ+ CLASSIC" tvg-logo="http://103.176.90.118/picons/logos/france/CINECLASSIC.png" group-title="|EU| FRANCE",CINÉ+ CLASSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845360.m3u8
+#EXTINF:-1 tvg-id="OCSGeants.fr" tvg-name="OCS GÉANTS" tvg-logo="http://103.176.90.118/picons/logos/france/OCS_geants.png" group-title="|EU| FRANCE",OCS GÉANTS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845359.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="OCS PULP" tvg-logo="http://103.176.90.118/picons/logos/france/OCS-PULP.png" group-title="|EU| FRANCE",OCS PULP
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845358.m3u8
+#EXTINF:-1 tvg-id="OCSMax.fr" tvg-name="OCS MAX" tvg-logo="http://103.176.90.118/picons/logos/france/OCS_Max.svg.png" group-title="|EU| FRANCE",OCS MAX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845357.m3u8
+#EXTINF:-1 tvg-id="Action.fr" tvg-name="ACTION" tvg-logo="http://103.176.90.118/picons/logos/france/ACTIONHD-1.png" group-title="|EU| FRANCE",ACTION
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845356.m3u8
+#EXTINF:-1 tvg-id="Polar.fr" tvg-name="POLAR+" tvg-logo="http://103.176.90.118/picons/logos/france/POLAR.png" group-title="|EU| FRANCE",POLAR+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845355.m3u8
+#EXTINF:-1 tvg-id="ComediePlus.fr" tvg-name="COMÉDIE+" tvg-logo="http://103.176.90.118/picons/logos/france/COMEDIEPLUS.png" group-title="|EU| FRANCE",COMÉDIE+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845354.m3u8
+#EXTINF:-1 tvg-id="ComedyCentral.fr" tvg-name="COMEDY CENTRAL FRANCE" tvg-logo="http://103.176.90.118/picons/logos/france/COMEDYCENTRAL-1.png" group-title="|EU| FRANCE",COMEDY CENTRAL FRANCE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845353.m3u8
+#EXTINF:-1 tvg-id="AlticeStudio.fr" tvg-name="ALTICE STUDIO" tvg-logo="http://103.176.90.118/picons/logos/france/ALTICESTUDIO.png" group-title="|EU| FRANCE",ALTICE STUDIO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845352.m3u8
+#EXTINF:-1 tvg-id="ParamountChannel.fr" tvg-name="PARAMOUNT CHANNEL" tvg-logo="http://103.176.90.118/picons/logos/france/PARAMOUNTCHANNEL.png" group-title="|EU| FRANCE",PARAMOUNT CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845351.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="PARAMOUNT DÉCALÉ" tvg-logo="http://103.176.90.118/picons/logos/france/PARAMOUNTCHANNEL.png" group-title="|EU| FRANCE",PARAMOUNT DÉCALÉ
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845350.m3u8
+#EXTINF:-1 tvg-id="SerieClub.fr" tvg-name="SÉRIE CLUB" tvg-logo="http://103.176.90.118/picons/logos/france/SERIECLUBTV.png" group-title="|EU| FRANCE",SÉRIE CLUB
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845349.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DREAMWORKS" tvg-logo="http://103.176.90.118/picons/logos/france/DreamWorks.png" group-title="|EU| FRANCE",DREAMWORKS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845348.m3u8
+#EXTINF:-1 tvg-id="Syfy.fr" tvg-name="SYFY" tvg-logo="http://103.176.90.118/picons/logos/france/SYFYHD.png" group-title="|EU| FRANCE",SYFY
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845347.m3u8
+#EXTINF:-1 tvg-id="EEntertainment.fr" tvg-name="E! ENTERTAINMENT" tvg-logo="http://103.176.90.118/picons/logos/france/e-entertainment-television.png" group-title="|EU| FRANCE",E! ENTERTAINMENT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845346.m3u8
+#EXTINF:-1 tvg-id="OlympiaTv.fr" tvg-name="OLYMPIA TV" tvg-logo="http://103.176.90.118/picons/logos/france/OLYMPIA.png" group-title="|EU| FRANCE",OLYMPIA TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845345.m3u8
+#EXTINF:-1 tvg-id="TCM.fr" tvg-name="TCM CINEMA" tvg-logo="http://103.176.90.118/picons/logos/france/TCMCINEMATV.png" group-title="|EU| FRANCE",TCM CINEMA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845344.m3u8
+#EXTINF:-1 tvg-id="WarnerTV.fr" tvg-name="WARNER+" tvg-logo="http://103.176.90.118/picons/logos/france/WARNER.png" group-title="|EU| FRANCE",WARNER+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845343.m3u8
+#EXTINF:-1 tvg-id="CanalPlusKids.fr" tvg-name="CANAL+ KIDS" tvg-logo="http://103.176.90.118/picons/logos/france/Canal+_Kids.png" group-title="|EU| FRANCE",CANAL+ KIDS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845341.m3u8
+#EXTINF:-1 tvg-id="CartoonNetwork.fr" tvg-name="CARTOON NETWORK" tvg-logo="http://103.176.90.118/picons/logos/france/CARTOONNETWORKFHD.png" group-title="|EU| FRANCE",CARTOON NETWORK
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845340.m3u8
+#EXTINF:-1 tvg-id="DisneyChannel.fr" tvg-name="DISNEY CHANNEL" tvg-logo="http://103.176.90.118/picons/logos/france/DISNEYCHANNEL.png" group-title="|EU| FRANCE",DISNEY CHANNEL
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845339.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="DISNEY CHANNEL +1" tvg-logo="http://103.176.90.118/picons/logos/france/DisneyPlusTV.png" group-title="|EU| FRANCE",DISNEY CHANNEL +1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845338.m3u8
+#EXTINF:-1 tvg-id="DisneyJunior.fr" tvg-name="DISNEY JUNIOR" tvg-logo="http://103.176.90.118/picons/logos/france/DISNEYJUNIORFHD.png" group-title="|EU| FRANCE",DISNEY JUNIOR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845337.m3u8
+#EXTINF:-1 tvg-id="Nickelodeon.fr" tvg-name="NICKELODEON" tvg-logo="http://103.176.90.118/picons/logos/france/NICKELODEON.png" group-title="|EU| FRANCE",NICKELODEON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845336.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="NICKELODEON +1" tvg-logo="http://103.176.90.118/picons/logos/france/NICKELODEON.png" group-title="|EU| FRANCE",NICKELODEON +1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845335.m3u8
+#EXTINF:-1 tvg-id="NickJr.fr" tvg-name="NICKELODEON JUNIOR" tvg-logo="http://103.176.90.118/picons/logos/france/NICKELODEONJUNIOR.png" group-title="|EU| FRANCE",NICKELODEON JUNIOR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845334.m3u8
+#EXTINF:-1 tvg-id="NickelodeonTeen.fr" tvg-name="NICKELODEON TEEN" tvg-logo="http://103.176.90.118/picons/logos/france/NICKELODEON-4-TEEN.png" group-title="|EU| FRANCE",NICKELODEON TEEN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845333.m3u8
+#EXTINF:-1 tvg-id="CanalJ.fr" tvg-name="CANAL J" tvg-logo="http://103.176.90.118/picons/logos/france/CANAL-J-FHD.png" group-title="|EU| FRANCE",CANAL J
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845332.m3u8
+#EXTINF:-1 tvg-id="Gulli.fr" tvg-name="GULLI" tvg-logo="http://103.176.90.118/picons/logos/france/GULLI.png" group-title="|EU| FRANCE",GULLI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845331.m3u8
+#EXTINF:-1 tvg-id="PIWI.fr" tvg-name="PIWI+" tvg-logo="http://103.176.90.118/picons/logos/france/PIWI+.png" group-title="|EU| FRANCE",PIWI+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845330.m3u8
+#EXTINF:-1 tvg-id="Tiji.fr" tvg-name="TIJI" tvg-logo="http://103.176.90.118/picons/logos/france/TIJIFHD.png" group-title="|EU| FRANCE",TIJI
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845329.m3u8
+#EXTINF:-1 tvg-id="TeleToonPlus.fr" tvg-name="TÉLÉTOON" tvg-logo="http://103.176.90.118/picons/logos/france/TELETOON+.png" group-title="|EU| FRANCE",TÉLÉTOON
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845328.m3u8
+#EXTINF:-1 tvg-id="TeleToonPlus.fr" tvg-name="TÉLÉTOON +1" tvg-logo="http://103.176.90.118/picons/logos/france/TELETOON+.png" group-title="|EU| FRANCE",TÉLÉTOON +1
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845327.m3u8
+#EXTINF:-1 tvg-id="Boing.fr" tvg-name="BOING" tvg-logo="http://103.176.90.118/picons/logos/france/BOING.png" group-title="|EU| FRANCE",BOING
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845326.m3u8
+#EXTINF:-1 tvg-id="Boomerang.fr" tvg-name="BOOMERANG" tvg-logo="http://103.176.90.118/picons/logos/france/BOOMERANGFHD.png" group-title="|EU| FRANCE",BOOMERANG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845325.m3u8
+#EXTINF:-1 tvg-id="Toonami.fr" tvg-name="WARNER TV NEXT" tvg-logo="http://103.176.90.118/picons/logos/france/TOONAMIHD-1.png" group-title="|EU| FRANCE",WARNER TV NEXT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845324.m3u8
+#EXTINF:-1 tvg-id="Mangas.fr" tvg-name="MANGAS" tvg-logo="http://103.176.90.118/picons/logos/france/MANGAS.png" group-title="|EU| FRANCE",MANGAS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845323.m3u8
+#EXTINF:-1 tvg-id="Pitchoun.fr" tvg-name="PITCHOUN TV" tvg-logo="http://103.176.90.118/picons/logos/france/PITCHOUN.png" group-title="|EU| FRANCE",PITCHOUN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845322.m3u8
+#EXTINF:-1 tvg-id="JONE.fr" tvg-name="J-ONE" tvg-logo="http://103.176.90.118/picons/logos/france/J-ONE-1.png" group-title="|EU| FRANCE",J-ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845321.m3u8
+#EXTINF:-1 tvg-id="GameOne.fr" tvg-name="GAME ONE" tvg-logo="http://103.176.90.118/picons/logos/france/GAMEONE1.png" group-title="|EU| FRANCE",GAME ONE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845320.m3u8
+#EXTINF:-1 tvg-id="MTV.fr" tvg-name="MTV" tvg-logo="http://103.176.90.118/picons/logos/france/MTV.png" group-title="|EU| FRANCE",MTV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845318.m3u8
+#EXTINF:-1 tvg-id="MTVHitsFrance.fr" tvg-name="MTV HITS" tvg-logo="http://103.176.90.118/picons/logos/france/MTV_Hits_logo.png" group-title="|EU| FRANCE",MTV HITS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845317.m3u8
+#EXTINF:-1 tvg-id="MCM.fr" tvg-name="MCM" tvg-logo="http://103.176.90.118/picons/logos/france/MCM1.png" group-title="|EU| FRANCE",MCM
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845316.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MCM TOP" tvg-logo="http://103.176.90.118/picons/logos/france/MCMTOP.png" group-title="|EU| FRANCE",MCM TOP
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845315.m3u8
+#EXTINF:-1 tvg-id="TraceUrban.fr" tvg-name="TRACE URBAN" tvg-logo="http://103.176.90.118/picons/logos/france/TRACEURBAN.png" group-title="|EU| FRANCE",TRACE URBAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845314.m3u8
+#EXTINF:-1 tvg-id="TraceCaribbean.fr" tvg-name="TRACE CARRIBEAN" tvg-logo="http://103.176.90.118/picons/logos/france/TRACE-CARIBBEAN.png" group-title="|EU| FRANCE",TRACE CARRIBEAN
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845313.m3u8
+#EXTINF:-1 tvg-id="M6Music.fr" tvg-name="M6 MUSIC" tvg-logo="http://103.176.90.118/picons/logos/france/M6MUSIC.png" group-title="|EU| FRANCE",M6 MUSIC
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845312.m3u8
+#EXTINF:-1 tvg-id="NRJHits.fr" tvg-name="NRJ HITS" tvg-logo="http://103.176.90.118/picons/logos/france/NRJHITS.png" group-title="|EU| FRANCE",NRJ HITS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845311.m3u8
+#EXTINF:-1 tvg-id="RFMTV.fr" tvg-name="RFM TV" tvg-logo="http://103.176.90.118/picons/logos/france/RFMTV.png" group-title="|EU| FRANCE",RFM TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845310.m3u8
+#EXTINF:-1 tvg-id="Melody.fr" tvg-name="MELODY TV" tvg-logo="http://103.176.90.118/picons/logos/france/MELODY.png" group-title="|EU| FRANCE",MELODY TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845309.m3u8
+#EXTINF:-1 tvg-id="GenerationSitcoms.fr" tvg-name="GÉNÉRATION TV" tvg-logo="http://103.176.90.118/picons/logos/france/generations-tv-regarder.png" group-title="|EU| FRANCE",GÉNÉRATION TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845308.m3u8
+#EXTINF:-1 tvg-id="StingrayDjazz.fr" tvg-name="DJAZZ TV" tvg-logo="http://103.176.90.118/picons/logos/france/Djazz.TV_logo.png" group-title="|EU| FRANCE",DJAZZ TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845307.m3u8
+#EXTINF:-1 tvg-id="Mezzo.fr" tvg-name="MEZZO" tvg-logo="http://103.176.90.118/picons/logos/france/MEZZO.png" group-title="|EU| FRANCE",MEZZO
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845306.m3u8
+#EXTINF:-1 tvg-id="StingrayClassica.fr" tvg-name="CLASSICA" tvg-logo="http://103.176.90.118/picons/logos/france/classica.png" group-title="|EU| FRANCE",CLASSICA
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845305.m3u8
+#EXTINF:-1 tvg-id="CStar.fr" tvg-name="CSTAR" tvg-logo="http://103.176.90.118/picons/logos/france/CSTARHITSFRENANCE-1.png" group-title="|EU| FRANCE",CSTAR
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845304.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CSTAR HITS" tvg-logo="http://103.176.90.118/picons/logos/france/CSTARHITSFRENANCE-1.png" group-title="|EU| FRANCE",CSTAR HITS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845303.m3u8
+#EXTINF:-1 tvg-id="ZoukTV.fr" tvg-name="ZOUK TV" tvg-logo="http://103.176.90.118/picons/logos/france/Zouk_TV.png" group-title="|EU| FRANCE",ZOUK TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845302.m3u8
+#EXTINF:-1 tvg-id="TVM3.ch" tvg-name="TVM3" tvg-logo="http://103.176.90.118/picons/logos/france/TVM3.png" group-title="|EU| FRANCE",TVM3
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845301.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MANDARIN TV" tvg-logo="http://103.176.90.118/picons/logos/france/MANDARIN.png" group-title="|EU| FRANCE",MANDARIN TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845300.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GOURMAND TV" tvg-logo="http://103.176.90.118/picons/logos/gourmandtv.jpg" group-title="|EU| FRANCE",GOURMAND TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845299.m3u8
+#EXTINF:-1 tvg-id="OneTV.ch" tvg-name="ONE TV" tvg-logo="http://103.176.90.118/picons/logos/france/ONETV.png" group-title="|EU| FRANCE",ONE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845298.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LFM TV" tvg-logo="http://103.176.90.118/picons/logos/france/LFMTV.png" group-title="|EU| FRANCE",LFM TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845297.m3u8
+#EXTINF:-1 tvg-id="RougeTV.ch" tvg-name="ROUGE TV" tvg-logo="http://103.176.90.118/picons/logos/france/ROUGETVTV.png" group-title="|EU| FRANCE",ROUGE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845296.m3u8
+#EXTINF:-1 tvg-id="APlus.fr" tvg-name="A+" tvg-logo="http://103.176.90.118/picons/logos/logos/A-HEVC.png" group-title="|EU| FRANCE",A+
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845295.m3u8
+#EXTINF:-1 tvg-id="MaisonEtTravauxTV.fr" tvg-name="MAISON & TRAVAUX" tvg-logo="http://103.176.90.118/picons/logos/france/maisontravauxtv.png" group-title="|EU| FRANCE",MAISON & TRAVAUX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845294.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="MyZEN FIT" tvg-logo="http://103.176.90.118/picons/logos/myzen.png" group-title="|EU| FRANCE",MyZEN FIT
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845292.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LUXE TV" tvg-logo="http://103.176.90.118/picons/logos/LUXE-TV-HD.png" group-title="|EU| FRANCE",LUXE TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845290.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GONG" tvg-logo="http://103.176.90.118/picons/logos/gong.png" group-title="|EU| FRANCE",GONG
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845289.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="GONG MAX" tvg-logo="http://103.176.90.118/picons/logos/gong.png" group-title="|EU| FRANCE",GONG MAX
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845288.m3u8
+#EXTINF:-1 tvg-id="Weo.fr" tvg-name="WÉO PICARDIE" tvg-logo="http://103.176.90.118/picons/logos/france/WEOTV.png" group-title="|EU| FRANCE",WÉO PICARDIE
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845287.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="CHEVAL TV" tvg-logo="http://103.176.90.118/picons/logos/france/CHEVAL.png" group-title="|EU| FRANCE",CHEVAL TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845286.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="AUTOPLUS" tvg-logo="http://103.176.90.118/picons/logos/france/AUTOPLUS.png" group-title="|EU| FRANCE",AUTOPLUS
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845285.m3u8
+#EXTINF:-1 tvg-id="ClubbingTV.fr" tvg-name="CLUBBING TV" tvg-logo="http://103.176.90.118/picons/logos/france/CLUBBING.png" group-title="|EU| FRANCE",CLUBBING TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845284.m3u8
+#EXTINF:-1 tvg-id="" tvg-name="LIMOGES TV" tvg-logo="http://103.176.90.118/picons/logos/france/LIMOGES.png" group-title="|EU| FRANCE",LIMOGES TV
+http://line.dino.ws:80/live/cgd75znhyy/gqehnxxfd4/845283.m3u8`;
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      initWhatsAppCTAs();
+      initReferralSystem();
+      trackUserBehavior();
+      
+      const channels = parseM3U(m3uData);
+      displayChannels(channels);
+      
+      // Démarrer avec une chaîne aléatoire
+      const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+      loadChannel(randomChannel.url, randomChannel.name);
+      
+      // Afficher le popup après 30 secondes
+      setTimeout(showSmartPopup, 30000);
+    });
+
+    // Fonction pour charger une chaîne avec minuterie
+    function loadChannel(url, channelName) {
+      // Réinitialiser la minuterie
+      resetCountdown();
+      
+      channelChanges++;
+      currentChannel = channelName;
+      currentSource = url;
+      retryCount = 0;
+      bufferDetected = false;
+      
+      // Afficher le loading overlay avec le nom de la chaîne
+      loadingOverlay.classList.add('active');
+      loadingOverlay.querySelector('.premium-content h3').innerHTML = `Chargement de ${channelName || 'la chaîne'}...`;
+      
+      // Pré-buffer avant lecture
+      preloadStream(url).then(() => {
+        if (Hls.isSupported()) {
+          if (hls) hls.destroy();
+          hls = new Hls({
+            maxBufferLength: 60,
+            maxMaxBufferLength: 120,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            lowLatencyMode: true,
+            abrEwmaDefaultEstimate: 500000,
+            startLevel: -1,
+            abrBandWidthFactor: 0.95,
+            abrBandWidthUpFactor: 0.7,
+            abrMaxWithRealBitrate: true
+          });
+          
+          hls.loadSource(url);
+          hls.attachMedia(videoPlayer);
+          
+          hls.on(Hls.Events.ERROR, function(event, data) {
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  handleStreamError('Erreur réseau');
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  handleStreamError('Erreur de lecture');
+              }
+            }
+          });
+          
+          hls.on(Hls.Events.FRAG_BUFFERED, function() {
+            bufferDetected = true;
+          });
+        } else {
+          videoPlayer.src = url;
+        }
+        
+        videoPlayer.play().then(() => {
+          startCountdown();
+        }).catch(e => {
+          console.error("Erreur de lecture:", e);
+          handleStreamError('Erreur de démarrage');
+        });
+        
+        if (channelChanges % 3 === 0) showSmartPopup();
+      }).catch(error => {
+        console.error("Erreur de préchargement:", error);
+        handleStreamError('Erreur de connexion');
+      });
+    }
+
+    // Préchargement du flux
+    function preloadStream(url) {
+      return new Promise((resolve, reject) => {
+        const testHls = new Hls();
+        testHls.loadSource(url);
+        testHls.on(Hls.Events.MANIFEST_PARSED, function() {
+          testHls.destroy();
+          resolve();
+        });
+        testHls.on(Hls.Events.ERROR, function(event, data) {
+          testHls.destroy();
+          reject(data);
+        });
+      });
+    }
+
+    // Gestion des erreurs améliorée
+    function handleStreamError(errorType) {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        const retryDelay = Math.min(3000 * retryCount, 15000);
+        
+        loadingOverlay.querySelector('.premium-content h3').innerHTML = `
+          ${errorType} - Reconnexion (${retryCount}/${maxRetries})...
+        `;
+        
+        setTimeout(() => {
+          loadChannel(currentSource, currentChannel);
+        }, retryDelay);
+      } else {
+        showErrorOverlay();
+      }
+    }
+
+    // Affichage d'erreur
+    function showErrorOverlay() {
+      loadingOverlay.innerHTML = `
+        <div class="premium-overlay">
+          <div class="premium-content">
+            <i class="fas fa-exclamation-triangle" style="color: #ff3333;"></i>
+            <h3>Chaîne temporairement indisponible</h3>
+            <p>Nous n'arrivons pas à charger cette chaîne. Essayez une autre chaîne ou passez à la version Premium pour un accès stable.</p>
+            <div style="margin-top: 20px;">
+              <button class="subscribe-btn" onclick="filterChannels()">
+                <i class="fas fa-random"></i> Chaîne aléatoire
+              </button>
+              <button class="subscribe-btn" style="margin-top: 10px; background: #25D366;" 
+                onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20à%20Africa%20Box%20TV'">
+                <i class="fab fa-whatsapp"></i> S'abonner
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Minuterie de lecture
+    function startCountdown() {
+      resetCountdown();
+      remainingTime = minViewTime;
+      updateCountdown();
+      
+      countdownInterval = setInterval(() => {
+        if (videoPlayer.paused || videoPlayer.ended || bufferDetected) return;
+        
+        remainingTime--;
+        updateCountdown();
+        
+        if (remainingTime <= 0) {
+          clearInterval(countdownInterval);
+          countdownElement.style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    function resetCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      remainingTime = minViewTime;
+      countdownElement.style.display = 'block';
+      updateCountdown();
+    }
+
+    function updateCountdown() {
+      countdownElement.textContent = `Lecture: ${remainingTime}s`;
+      countdownElement.style.color = remainingTime > 10 ? 'white' : '#ff5555';
+    }
+
+    // Fonction pour parser le M3U
+    function parseM3U(data) {
+      return data.split("\n").reduce((channels, line, idx, arr) => {
+        if (line.startsWith("#EXTINF")) {
+          const name = line.split(",")[1];
+          const logo = line.match(/tvg-logo="(.+?)"/)?.[1] || "";
+          const url = arr[idx + 1];
+          if (url && !url.startsWith("#")) {
+            channels.push({ name, logo, url });
+          }
+        }
+        return channels;
+      }, []);
+    }
+
+    // Fonction pour afficher les chaînes
+    function displayChannels(channels) {
+      channelsList.innerHTML = "";
+      channels.forEach(({ name, logo, url }) => {
+        const channelDiv = document.createElement("li");
+        channelDiv.className = "channel";
+        channelDiv.onclick = () => loadChannel(url, name);
+        channelDiv.innerHTML = `
+          <img src="${logo || 'https://via.placeholder.com/80x45?text=No+Logo'}" alt="${name}" 
+               onerror="this.src='https://via.placeholder.com/80x45?text=No+Logo'">
+          <span>${name}</span>
+        `;
+        channelsList.appendChild(channelDiv);
+      });
+    }
+
+    // Fonction pour filtrer les chaînes
+    function filterChannels() {
+      const query = searchInput.value.toLowerCase();
+      const filtered = parseM3U(m3uData).filter(({ name }) => 
+        name.toLowerCase().includes(query)
+      );
+      displayChannels(filtered);
+      
+      // Charger une chaîne aléatoire si recherche vide
+      if (!query && filtered.length > 0) {
+        const randomChannel = filtered[Math.floor(Math.random() * filtered.length)];
+        loadChannel(randomChannel.url, randomChannel.name);
+      }
+    }
+
+    // Pop-up d'abonnement intelligent
+    function showSmartPopup() {
+      if (!popupShown && (timeWatched > 120 || channelChanges > 3)) {
+        popupShown = true;
+        Swal.fire({
+          title: '<strong style="color: #FFD700">Visionnage limité détecté</strong>',
+          html: `
+            <p style="color: white">La version Premium résout ces problèmes:</p>
+            <ul style="text-align: left; margin: 20px 0; color: white; padding-left: 20px;">
+              <li>✓ Lecture continue sans limite de temps</li>
+              <li>✓ Qualité HD stable</li>
+              <li>✓ Accès à toutes les chaînes sans restriction</li>
+              <li>✓ Support technique prioritaire</li>
+            </ul>
+            <div style="margin: 25px 0; display: flex; gap: 10px; justify-content: center;">
+              <button onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20au%20forfait%20mensuel%20Africa%20Box%20TV'" 
+                style="padding: 10px 15px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                <span>3,000 FCFA/mois</span>
+              </button>
+              <button onclick="window.location.href='https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m%27abonner%20au%20forfait%20annuel%20Africa%20Box%20TV'" 
+                style="padding: 10px 15px; background: #FFD700; color: black; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                <span>15,000 FCFA/an</span><br>
+                <small style="font-size: 0.7em">Économisez 58%</small>
+              </button>
+            </div>
+          `,
+          background: 'linear-gradient(135deg, #1e1e2f 0%, #03064a 100%)',
+          showCloseButton: true,
+          showCancelButton: true,
+          cancelButtonText: 'Continuer en version gratuite',
+          confirmButtonText: 'Je m\'abonne',
+          confirmButtonColor: '#FFD700',
+          backdrop: 'rgba(0,0,0,0.8)'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            startFreeTrial();
+          }
+        });
+      }
+    }
+
+    // Système de parrainage
+    function initReferralSystem() {
+      const referralCode = new URLSearchParams(window.location.search).get('ref');
+      if (referralCode) {
+        localStorage.setItem('referralCode', referralCode);
+        Swal.fire({
+          title: 'Demandez un Abonnement!',
+          text: `Vous utilisez le code ${referralCode}. Vous et votre parrain gagnerez 7 jours gratuits si vous vous abonnez.`,
+          icon: 'success'
+        });
+      }
+      
+      const shareBtn = document.createElement('a');
+      shareBtn.className = 'share-float';
+      shareBtn.href = "https://wa.me/?text=Découvrez%20Africa%20Box%20TV%20-%201500%20chaînes%20en%20streaming%20%0Ahttps://play.google.com/store/apps/details?id=rtb.aplinig";
+      shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+      document.body.appendChild(shareBtn);
+    }
+
+    function generateUserCode() {
+      return 'USER' + Math.floor(1000 + Math.random() * 9000);
+    }
+
+    // Intégration WhatsApp
+    function initWhatsAppCTAs() {
+      const whatsappBtn = document.createElement('a');
+      whatsappBtn.className = 'whatsapp-float';
+      whatsappBtn.href = "https://wa.me/22602717155?text=Bonjour,%20je%20souhaite%20m'abonner%20à%20Africa%20Box%20TV";
+      whatsappBtn.innerHTML = '<i class="fab fa-whatsapp"></i>';
+      document.body.appendChild(whatsappBtn);
+    }
+
+    // Tracking du comportement utilisateur
+    function trackUserBehavior() {
+      videoPlayer.addEventListener('play', () => {
+        timeWatched++;
+        if (timeWatched % 30 === 0) showSmartPopup();
+      });
+      
+      setInterval(() => {
+        // Envoyer des données analytiques (à implémenter avec votre backend)
+        console.log(`Temps de visionnage: ${timeWatched} sec | Changements de chaîne: ${channelChanges}`);
+      }, 60000);
+    }
+
+    // Essai gratuit
+    function startFreeTrial() {
+      Swal.fire({
+        title: 'Essai Gratuit !',
+        html: `
+          <p>Profitez de 30 secondes gratuits sur Africa Box TV Premium!</p>
+          <p><small>Après cette période, votre accès sera automatiquement bloqué.</small></p>
+        `,
+        icon: 'success',
+        confirmButtonText: 'Fermer'
+      });
+      hasSubscribed = true;
+      minViewTime = 0; // Désactive la limitation de temps
+      resetCountdown();
+    }
+
+    // Gestion des événements du lecteur
+    videoPlayer.addEventListener('waiting', () => {
+      if (!bufferDetected) {
+        loadingOverlay.classList.add('active');
+      }
+    });
+
+    videoPlayer.addEventListener('playing', () => {
+      loadingOverlay.classList.remove('active');
+      bufferDetected = false;
+    });
+
+    videoPlayer.addEventListener('error', () => {
+      handleStreamError('Erreur de lecture');
+    });
+  </script>
+</body>
+</html>
